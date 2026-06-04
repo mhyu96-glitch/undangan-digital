@@ -45,6 +45,18 @@ const formatTimeZone = (timezone) => {
   return timezone || '';
 };
 
+const animationClassByPreset = {
+  'gentle-float': 'best-live-animation-gentle-float',
+  'soft-pulse': 'best-live-animation-soft-pulse',
+  'slide-drift': 'best-live-animation-slide-drift',
+};
+
+const animationDurationByIntensity = {
+  calm: '6s',
+  normal: '4.5s',
+  lively: '3s',
+};
+
 const getTargetDate = (schedule) => new Date(`${schedule.date}T${schedule.time}:00`).getTime();
 
 function useCountdown(schedule) {
@@ -107,6 +119,37 @@ function BestMixStyles() {
 
       .best-float { animation: bestFloat 6s ease-in-out infinite; }
       .best-bubble { animation: bestBubble 9s linear infinite; }
+
+      @keyframes bestLiveGentleFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-12px); }
+      }
+
+      @keyframes bestLiveSoftPulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.035); }
+      }
+
+      @keyframes bestLiveSlideDrift {
+        0%, 100% { transform: translateX(0); }
+        50% { transform: translateX(12px); }
+      }
+
+      .best-live-animation-gentle-float {
+        animation: bestLiveGentleFloat var(--best-live-duration, 4.5s) ease-in-out infinite;
+        will-change: transform;
+      }
+
+      .best-live-animation-soft-pulse {
+        animation: bestLiveSoftPulse var(--best-live-duration, 4.5s) ease-in-out infinite;
+        transform-origin: center top;
+        will-change: transform;
+      }
+
+      .best-live-animation-slide-drift {
+        animation: bestLiveSlideDrift var(--best-live-duration, 4.5s) ease-in-out infinite;
+        will-change: transform;
+      }
 
       .best-glass {
         background: rgba(255, 255, 255, 0.2);
@@ -188,7 +231,10 @@ function BestMixStyles() {
 
       @media (prefers-reduced-motion: reduce) {
         .best-float,
-        .best-bubble {
+        .best-bubble,
+        .best-live-animation-gentle-float,
+        .best-live-animation-soft-pulse,
+        .best-live-animation-slide-drift {
           animation: none !important;
         }
       }
@@ -247,6 +293,10 @@ export default function BestMixInvitation({ config, preview = false }) {
   ]);
   const audioRef = useRef(null);
   const gallery = useMemo(() => config.media.gallery || [], [config.media.gallery]);
+  const liveAnimationClass = animationClassByPreset[config.animation?.preset] || '';
+  const liveAnimationStyle = {
+    '--best-live-duration': animationDurationByIntensity[config.animation?.intensity] || animationDurationByIntensity.normal,
+  };
   const handleImageError = (event) => {
     if (event.currentTarget.src !== config.media.fallbackImage) {
       event.currentTarget.src = config.media.fallbackImage;
@@ -362,8 +412,9 @@ export default function BestMixInvitation({ config, preview = false }) {
       </header>
 
       <main className={`no-scrollbar relative z-10 overflow-y-auto px-6 pb-28 pt-24 ${preview ? 'h-full' : 'h-screen'}`}>
-        {!isOpen ? (
-          <section className="flex min-h-[calc(100vh-152px)] flex-col items-center justify-center text-center">
+        <div className={liveAnimationClass} style={liveAnimationStyle}>
+          {!isOpen ? (
+            <section className="flex min-h-[calc(100vh-152px)] flex-col items-center justify-center text-center">
             <div className="best-glass mb-6 inline-flex rounded-full p-4 best-float">
               <Sparkles size={44} />
             </div>
@@ -380,11 +431,11 @@ export default function BestMixInvitation({ config, preview = false }) {
               Buka Undangan
               <Navigation size={17} />
             </button>
-          </section>
-        ) : null}
+            </section>
+          ) : null}
 
-        {isOpen && activeSection === 'cover' ? (
-          <section className="space-y-5 text-center">
+          {isOpen && activeSection === 'cover' ? (
+            <section className="space-y-5 text-center">
             <h1 className="text-4xl font-black leading-tight">{config.title}</h1>
             <div className="best-glass overflow-hidden rounded-[30px] p-2">
               <img
@@ -395,11 +446,11 @@ export default function BestMixInvitation({ config, preview = false }) {
               />
             </div>
             <p className="text-sm leading-7 text-white/82">{config.subtitle}</p>
-          </section>
-        ) : null}
+            </section>
+          ) : null}
 
-        {isOpen && activeSection === 'profile' ? (
-          <section className="flex flex-col items-center gap-6 text-center">
+          {isOpen && activeSection === 'profile' ? (
+            <section className="flex flex-col items-center gap-6 text-center">
             <div className="relative mt-3">
               <div className="absolute inset-0 rounded-full bg-[#00e5ff]/45 blur-3xl" />
               <div className="relative h-52 w-52 overflow-hidden rounded-full bg-gradient-to-br from-[#00e5ff] via-white/85 to-[#f5cd00] p-2 shadow-[0_24px_60px_rgba(0,89,187,.32)]">
@@ -429,11 +480,11 @@ export default function BestMixInvitation({ config, preview = false }) {
                 Semoga menjadi anak yang sholeh, berbakti kepada orang tua, cerdas, dan senantiasa dalam lindungan Allah SWT.
               </p>
             </div>
-          </section>
-        ) : null}
+            </section>
+          ) : null}
 
-        {isOpen && activeSection === 'event' ? (
-          <section className="space-y-5">
+          {isOpen && activeSection === 'event' ? (
+            <section className="space-y-5">
             <div className="text-center">
               <p className="mb-2 inline-flex rounded-full bg-[#f5cd00] px-4 py-1 text-xs font-bold text-[#221b00]">
                 {config.eventType.toUpperCase()}
@@ -476,11 +527,11 @@ export default function BestMixInvitation({ config, preview = false }) {
                 </a>
               </div>
             </div>
-          </section>
-        ) : null}
+            </section>
+          ) : null}
 
-        {isOpen && activeSection === 'wishes' ? (
-          <section className="space-y-6">
+          {isOpen && activeSection === 'wishes' ? (
+            <section className="space-y-6">
             {config.sections?.gallery ? (
               <div>
                 <div className="mb-3 flex items-center gap-2">
@@ -562,11 +613,11 @@ export default function BestMixInvitation({ config, preview = false }) {
                 </div>
               </div>
             ) : null}
-          </section>
-        ) : null}
+            </section>
+          ) : null}
 
-        {isOpen && activeSection === 'thanks' ? (
-          <section className="space-y-6">
+          {isOpen && activeSection === 'thanks' ? (
+            <section className="space-y-6">
             {config.sections?.closing ? (
               <div className="best-glass relative overflow-hidden rounded-[30px] p-8 text-center">
                 <Star className="absolute -right-3 -top-3 h-20 w-20 text-[#f5cd00]/20 best-float" />
@@ -610,8 +661,9 @@ export default function BestMixInvitation({ config, preview = false }) {
                 </div>
               </div>
             ) : null}
-          </section>
-        ) : null}
+            </section>
+          ) : null}
+        </div>
       </main>
 
       {isOpen ? (

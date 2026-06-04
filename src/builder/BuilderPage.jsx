@@ -262,7 +262,7 @@ export default function BuilderPage() {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-7xl gap-5 px-4 py-5 xl:grid-cols-[220px_minmax(0,1fr)_420px]">
+      <div className="mx-auto grid max-w-7xl gap-5 px-4 py-5 xl:grid-cols-[220px_minmax(0,1fr)_360px]">
         <aside className="builder-panel h-fit xl:sticky xl:top-5">
           <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Editor</p>
           <nav className="grid gap-2">
@@ -771,8 +771,16 @@ function LivePreview({ config }) {
           </a>
         </div>
 
-        <div className="h-[760px] overflow-hidden border border-slate-200 bg-slate-900">
-          <BestMixInvitation config={config} preview />
+        <div className="mx-auto max-w-[312px]">
+          <div className="rounded-[38px] border border-slate-900 bg-slate-950 p-2 shadow-[0_22px_60px_rgba(15,23,42,0.24)]">
+            <div className="relative overflow-hidden rounded-[30px] border border-slate-800 bg-slate-900">
+              <div className="pointer-events-none absolute left-1/2 top-2 z-50 h-5 w-24 -translate-x-1/2 rounded-full bg-slate-950" />
+              <div className="pointer-events-none absolute right-3 top-3 z-50 h-2 w-2 rounded-full bg-slate-700" />
+              <div className="h-[640px] overflow-hidden">
+                <BestMixInvitation config={config} preview />
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </aside>
