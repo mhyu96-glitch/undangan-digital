@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
 import {
   Calendar,
+  Copy,
   Download,
+  ExternalLink,
   Eye,
   Gift,
   Image,
@@ -22,6 +24,7 @@ import defaultInvitationConfig from '../config/defaultInvitationConfig.js';
 import { getInvitationTheme, invitationThemes } from '../config/themes.js';
 import {
   clearBuilderDraft,
+  createPublicInvitationUrl,
   downloadConfigJson,
   loadBuilderDraft,
   saveBuilderDraft,
@@ -148,6 +151,7 @@ export default function BuilderPage() {
   const [activeSection, setActiveSection] = useState('basic');
   const [status, setStatus] = useState('Preview realtime aktif');
   const [importError, setImportError] = useState('');
+  const [publicUrl, setPublicUrl] = useState('');
 
   const theme = getInvitationTheme(config.theme);
   const galleryText = useMemo(() => (config.media.gallery || []).join('\n'), [config.media.gallery]);
@@ -160,7 +164,16 @@ export default function BuilderPage() {
 
   const handleSaveDraft = () => {
     saveBuilderDraft(config);
-    setStatus('Draft tersimpan di browser');
+    const nextPublicUrl = createPublicInvitationUrl(config);
+    setPublicUrl(nextPublicUrl);
+    setStatus('Draft tersimpan dan link konsumen siap dibagikan');
+  };
+
+  const handleCopyPublicUrl = async () => {
+    const nextPublicUrl = publicUrl || createPublicInvitationUrl(config);
+    setPublicUrl(nextPublicUrl);
+    await navigator.clipboard.writeText(nextPublicUrl);
+    setStatus('Link konsumen sudah disalin');
   };
 
   const handleReset = () => {
@@ -168,6 +181,7 @@ export default function BuilderPage() {
     setConfig(cloneConfig(defaultInvitationConfig));
     setStatus('Config dikembalikan ke default');
     setImportError('');
+    setPublicUrl('');
   };
 
   const handleImport = async (event) => {
@@ -752,15 +766,16 @@ export default function BuilderPage() {
           ) : null}
         </section>
 
-        <LivePreview config={config} />
+        <LivePreview config={config} onCopyPublicUrl={handleCopyPublicUrl} publicUrl={publicUrl} />
       </div>
     </main>
   );
 }
 
-function LivePreview({ config }) {
+function LivePreview({ config, onCopyPublicUrl, publicUrl }) {
   const isClassic = config.template === 'classic-marine';
   const previewKey = `${config.template}-${config.theme}-${config.animation?.preset}-${config.animation?.intensity}`;
+  const activePublicUrl = publicUrl || createPublicInvitationUrl(config);
 
   return (
     <aside className="xl:sticky xl:top-5 xl:self-start">
@@ -775,11 +790,28 @@ function LivePreview({ config }) {
           </div>
           <a
             className="builder-pill text-sky-800"
-            href="/invite"
+            href={activePublicUrl}
             onClick={() => saveBuilderDraft(config)}
+            target="_blank"
+            rel="noopener noreferrer"
           >
+            <ExternalLink size={15} />
             Buka undangan
           </a>
+        </div>
+
+        <div className="mb-4 rounded-[22px] border border-white/70 bg-white/70 p-3 shadow-sm shadow-slate-200/70 backdrop-blur-xl">
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">Link Konsumen</p>
+          <div className="flex gap-2">
+            <input
+              className="builder-input min-w-0 flex-1 py-2 text-xs"
+              readOnly
+              value={activePublicUrl}
+            />
+            <button className="builder-button shrink-0 px-3" type="button" onClick={onCopyPublicUrl} aria-label="Copy link konsumen">
+              <Copy size={16} />
+            </button>
+          </div>
         </div>
 
         <div className="mx-auto max-w-[312px]">

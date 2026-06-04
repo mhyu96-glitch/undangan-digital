@@ -1,5 +1,5 @@
 import defaultInvitationConfig from '../config/defaultInvitationConfig.js';
-import { loadBuilderDraft } from './configStorage.js';
+import { loadBuilderDraft, loadPublicConfigFromUrl } from './configStorage.js';
 
 export const cloneConfig = (config) => JSON.parse(JSON.stringify(config));
 
@@ -29,5 +29,7 @@ export const mergeConfig = (base, override) => {
 
 export const getActiveInvitationConfig = () => {
   if (typeof window === 'undefined') return cloneConfig(defaultInvitationConfig);
+  const publicConfig = loadPublicConfigFromUrl();
+  if (publicConfig) return mergeConfig(defaultInvitationConfig, publicConfig);
   return mergeConfig(defaultInvitationConfig, loadBuilderDraft());
 };

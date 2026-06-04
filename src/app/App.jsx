@@ -18,7 +18,7 @@ export default function App() {
       return <BestMixInvitation config={config} />;
     }
 
-    return <BabyInvitation />;
+    return <BabyInvitation config={config} />;
   };
 
   if (path === '/' || path === '/builder') {
