@@ -2,13 +2,13 @@
 
 Static React app untuk membuat dan menampilkan undangan digital reusable. App punya dua mode:
 
-- `/` untuk halaman undangan tamu.
-- `/builder` untuk mengatur konten, tema, media, lokasi, rekening, section, import, export, dan draft lokal.
+- `/` dan `/builder` untuk mengatur konten, tema, media, lokasi, rekening, section, import, export, dan draft lokal.
+- `/invite` atau `/undangan` untuk halaman undangan tamu.
 
 ## Features
 
 - Config-driven invitation content.
-- Nama tamu dari query URL, contoh `/?to=Bapak%20Andi`.
+- Nama tamu dari query URL, contoh `/invite?to=Bapak%20Andi`.
 - Builder dengan live preview, draft localStorage, import JSON, export JSON, dan reset default.
 - Tema dasar marine dan elegant.
 - Section bisa dinyalakan atau dimatikan.
@@ -30,6 +30,7 @@ Buka:
 
 - `http://localhost:5173/`
 - `http://localhost:5173/builder`
+- `http://localhost:5173/invite`
 
 Di PowerShell yang memblokir `npm.ps1`, gunakan:
 
@@ -53,6 +54,7 @@ Default URL:
 
 - `http://127.0.0.1:5173/`
 - `http://127.0.0.1:5173/builder`
+- `http://127.0.0.1:5173/invite`
 
 Port dan host bisa diubah:
 

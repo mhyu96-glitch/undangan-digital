@@ -13,7 +13,15 @@ export default function App() {
   const path = normalizePath(window.location.pathname);
   const config = getActiveInvitationConfig();
 
-  if (path === '/builder') {
+  const renderInvitation = () => {
+    if (config.template === 'best-mix') {
+      return <BestMixInvitation config={config} />;
+    }
+
+    return <BabyInvitation />;
+  };
+
+  if (path === '/' || path === '/builder') {
     return <BuilderPage />;
   }
 
@@ -21,9 +29,9 @@ export default function App() {
     return <TemplateShowcase />;
   }
 
-  if (config.template === 'best-mix') {
-    return <BestMixInvitation config={config} />;
+  if (path === '/invite' || path === '/undangan') {
+    return renderInvitation();
   }
 
-  return <BabyInvitation />;
+  return <BuilderPage />;
 }

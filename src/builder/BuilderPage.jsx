@@ -764,7 +764,7 @@ function LivePreview({ config }) {
           </div>
           <a
             className="text-sm font-semibold text-sky-700 hover:text-sky-950"
-            href="/"
+            href="/invite"
             onClick={() => saveBuilderDraft(config)}
           >
             Buka undangan
