@@ -21,6 +21,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { getGuestNameFromUrl } from '../services/guestName.js';
+import { createObjectUrlFromIndexedAudio, isIndexedAudioUrl } from '../services/audioStorage.js';
 import { getSoundCloudEmbedUrl, isDirectAudioUrl, isSoundCloudUrl } from '../services/mediaUrl.js';
 
 const navItems = [
@@ -293,6 +294,7 @@ export default function BestMixInvitation({ config, preview = false }) {
     },
   ]);
   const audioRef = useRef(null);
+  const resolvedAudioUrlRef = useRef('');
   const gallery = useMemo(() => config.media.gallery || [], [config.media.gallery]);
   const musicUrl = config.media.musicUrl || '';
   const hasDirectAudio = isDirectAudioUrl(musicUrl);
@@ -310,12 +312,29 @@ export default function BestMixInvitation({ config, preview = false }) {
   useEffect(() => {
     setGuestName(getGuestNameFromUrl(config.guest?.defaultName || 'Bapak/Ibu/Saudara/i'));
 
-    if (!preview && hasDirectAudio) {
-      audioRef.current = new Audio(musicUrl);
-      audioRef.current.loop = true;
-    }
+    let objectUrl = '';
+    let cancelled = false;
 
-    return () => audioRef.current?.pause();
+    const setupAudio = async () => {
+      if (preview || !hasDirectAudio) return;
+      const resolvedAudioUrl = isIndexedAudioUrl(musicUrl)
+        ? await createObjectUrlFromIndexedAudio(musicUrl)
+        : musicUrl;
+
+      if (cancelled || !resolvedAudioUrl) return;
+      objectUrl = isIndexedAudioUrl(musicUrl) ? resolvedAudioUrl : '';
+      resolvedAudioUrlRef.current = resolvedAudioUrl;
+      audioRef.current = new Audio(resolvedAudioUrl);
+      audioRef.current.loop = true;
+    };
+
+    setupAudio();
+
+    return () => {
+      cancelled = true;
+      audioRef.current?.pause();
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
   }, [config.guest?.defaultName, hasDirectAudio, musicUrl, preview]);
 
   const showToast = (message) => {

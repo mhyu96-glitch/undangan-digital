@@ -1,4 +1,7 @@
+import { isIndexedAudioUrl } from './audioStorage.js';
+
 export const isDirectAudioUrl = (url = '') =>
+  isIndexedAudioUrl(url.trim()) ||
   /^data:audio\//i.test(url.trim()) ||
   /\.(mp3|wav|ogg|m4a|aac)(\?.*)?$/i.test(url.trim());
 

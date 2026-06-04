@@ -22,6 +22,7 @@ import {
 import BabyInvitation from '../../BabyInvitation.jsx';
 import defaultInvitationConfig from '../config/defaultInvitationConfig.js';
 import { getInvitationTheme, invitationThemes } from '../config/themes.js';
+import { isIndexedAudioUrl, saveAudioFile } from '../services/audioStorage.js';
 import {
   clearBuilderDraft,
   createLocalInvitationUrl,
@@ -192,10 +193,15 @@ export default function BuilderPage() {
     setStatus('Link konsumen sudah disalin');
   };
 
-  const handleDownloadStandaloneHtml = () => {
-    saveBuilderDraft(config);
-    downloadStandaloneInvitationHtml(config);
-    setStatus('File index.html undangan siap untuk subdomain');
+  const handleDownloadStandaloneHtml = async () => {
+    try {
+      saveBuilderDraft(config);
+      setStatus('Menyiapkan file index.html dengan musik...');
+      await downloadStandaloneInvitationHtml(config);
+      setStatus('File index.html undangan siap untuk subdomain');
+    } catch {
+      setStatus('Gagal membuat file subdomain. Coba import audio lagi atau gunakan file lebih kecil.');
+    }
   };
 
   const handleReset = () => {
@@ -224,18 +230,19 @@ export default function BuilderPage() {
     }
   };
 
-  const handleImportMusic = (event) => {
+  const handleImportMusic = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setField('media.musicUrl', reader.result);
-      setStatus(`Musik "${file.name}" diimport. Klik Simpan sebelum buka undangan.`);
-    };
-    reader.onerror = () => setStatus('Gagal import musik. Coba file audio lain.');
-    reader.readAsDataURL(file);
-    event.target.value = '';
+    try {
+      const indexedUrl = await saveAudioFile(file);
+      setField('media.musicUrl', indexedUrl);
+      setStatus(`Musik "${file.name}" diimport. Klik Simpan lalu Buka undangan.`);
+    } catch {
+      setStatus('Gagal import musik. Browser mungkin membatasi penyimpanan file ini.');
+    } finally {
+      event.target.value = '';
+    }
   };
 
   const setGiftAccountField = (index, field, value) => {
@@ -558,7 +565,7 @@ export default function BuilderPage() {
                       <input
                         className="builder-input"
                         placeholder="https://...mp3 atau https://soundcloud.com/..."
-                        value={config.media.musicUrl?.startsWith('data:audio/') ? 'Audio import tersimpan di draft' : config.media.musicUrl}
+                        value={isIndexedAudioUrl(config.media.musicUrl) || config.media.musicUrl?.startsWith('data:audio/') ? 'Audio import tersimpan di browser ini' : config.media.musicUrl}
                         onChange={(event) => setField('media.musicUrl', event.target.value)}
                       />
                       <label className="builder-button cursor-pointer">
@@ -572,9 +579,9 @@ export default function BuilderPage() {
                         <track kind="captions" />
                       </audio>
                     ) : null}
-                    {config.media.musicUrl?.startsWith('data:audio/') ? (
+                    {isIndexedAudioUrl(config.media.musicUrl) || config.media.musicUrl?.startsWith('data:audio/') ? (
                       <p className="rounded-2xl bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-800">
-                        Audio import akan jalan untuk preview dan Buka undangan di browser ini. Untuk link konsumen, file besar sebaiknya diupload sebagai URL mp3.
+                        Audio import akan jalan untuk preview dan Buka undangan di browser ini. Untuk subdomain, klik File Subdomain agar musik ikut masuk ke file HTML.
                       </p>
                     ) : null}
                     {config.media.musicUrl && isSoundCloudUrl(config.media.musicUrl) ? (

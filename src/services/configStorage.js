@@ -64,7 +64,25 @@ export const createLocalInvitationUrl = () => {
 const escapeInlineJson = (value) =>
   JSON.stringify(value).replace(/</g, '\\u003c');
 
-export const downloadStandaloneInvitationHtml = (config, filename = 'index.html') => {
+const fileToDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+
+export const downloadStandaloneInvitationHtml = async (config, filename = 'index.html') => {
+  const { getAudioFile, getIndexedAudioId, isIndexedAudioUrl } = await import('./audioStorage.js');
+  const standaloneConfig = JSON.parse(JSON.stringify(config));
+
+  if (isIndexedAudioUrl(standaloneConfig.media?.musicUrl || '')) {
+    const record = await getAudioFile(getIndexedAudioId(standaloneConfig.media.musicUrl));
+    if (record?.blob) {
+      standaloneConfig.media.musicUrl = await fileToDataUrl(record.blob);
+    }
+  }
+
   const appUrl = new URL('/', window.location.origin);
   appUrl.searchParams.set('mode', 'invite');
   appUrl.searchParams.set('source', 'message');
@@ -74,7 +92,7 @@ export const downloadStandaloneInvitationHtml = (config, filename = 'index.html'
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${config.title || 'Undangan Digital'}</title>
+    <title>${standaloneConfig.title || 'Undangan Digital'}</title>
     <style>
       html, body { margin: 0; min-height: 100%; background: #e0f7fa; }
       iframe { width: 100%; height: 100vh; border: 0; display: block; }
@@ -82,10 +100,10 @@ export const downloadStandaloneInvitationHtml = (config, filename = 'index.html'
     </style>
   </head>
   <body>
-    <iframe id="invitationFrame" title="${config.title || 'Undangan Digital'}" src="${appUrl.toString()}" allow="autoplay; clipboard-write"></iframe>
+    <iframe id="invitationFrame" title="${standaloneConfig.title || 'Undangan Digital'}" src="${appUrl.toString()}" allow="autoplay; clipboard-write"></iframe>
     <noscript><div class="fallback">Aktifkan JavaScript untuk membuka undangan.</div></noscript>
     <script>
-      const invitationConfig = ${escapeInlineJson(config)};
+      const invitationConfig = ${escapeInlineJson(standaloneConfig)};
       const frame = document.getElementById('invitationFrame');
       const sendConfig = () => {
         frame.contentWindow.postMessage({

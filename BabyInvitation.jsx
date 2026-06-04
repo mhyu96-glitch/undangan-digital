@@ -9,6 +9,7 @@ import defaultInvitationConfig from './src/config/defaultInvitationConfig.js';
 import { getInvitationTheme } from './src/config/themes.js';
 import { loadBuilderDraft } from './src/services/configStorage.js';
 import { getGuestNameFromUrl } from './src/services/guestName.js';
+import { createObjectUrlFromIndexedAudio, isIndexedAudioUrl } from './src/services/audioStorage.js';
 import { getSoundCloudEmbedUrl, isDirectAudioUrl, isSoundCloudUrl } from './src/services/mediaUrl.js';
 
 // === CONFIGURATION & DATA CONSTANTS ===
@@ -598,14 +599,27 @@ export default function BabyInvitation({ config: providedConfig = null }) {
   useEffect(() => {
     setGuestName(getGuestNameFromUrl(config.guest?.defaultName || defaultInvitationConfig.guest.defaultName));
 
-    // Setup audio
-    if (hasDirectAudio) {
-      audioRef.current = new Audio(audioUrl);
+    let objectUrl = '';
+    let cancelled = false;
+
+    const setupAudio = async () => {
+      if (!hasDirectAudio) return;
+      const resolvedAudioUrl = isIndexedAudioUrl(audioUrl)
+        ? await createObjectUrlFromIndexedAudio(audioUrl)
+        : audioUrl;
+
+      if (cancelled || !resolvedAudioUrl) return;
+      objectUrl = isIndexedAudioUrl(audioUrl) ? resolvedAudioUrl : '';
+      audioRef.current = new Audio(resolvedAudioUrl);
       audioRef.current.loop = true;
-    }
+    };
+
+    setupAudio();
 
     return () => {
+      cancelled = true;
       audioRef.current?.pause();
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [audioUrl, config.guest?.defaultName, hasDirectAudio]);
 
