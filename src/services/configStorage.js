@@ -100,44 +100,108 @@ const prepareStandaloneConfig = async (config) => {
   return { metadata, standaloneConfig };
 };
 
-const buildStandaloneInvitationHtml = (standaloneConfig) => {
-  const appUrl = new URL('/', window.location.origin);
-  appUrl.searchParams.set('mode', 'invite');
-  appUrl.searchParams.set('source', 'message');
-
+const buildStandaloneInvitationHtml = (standaloneConfig, assets = { scripts: [], styles: [] }) => {
   return `<!doctype html>
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${standaloneConfig.title || 'Undangan Digital'}</title>
+    ${assets.styles.map((asset) => `<link rel="stylesheet" href="/${asset.name}" />`).join('\n    ')}
     <style>
       html, body { margin: 0; min-height: 100%; background: #e0f7fa; }
-      iframe { width: 100%; height: 100vh; border: 0; display: block; }
       .fallback { font-family: system-ui, sans-serif; padding: 24px; color: #0f172a; }
     </style>
   </head>
-  <body>
-    <iframe id="invitationFrame" title="${standaloneConfig.title || 'Undangan Digital'}" src="${appUrl.toString()}" allow="autoplay; clipboard-write"></iframe>
+  <body class="font-sans-clean antialiased">
+    <div id="root"></div>
     <noscript><div class="fallback">Aktifkan JavaScript untuk membuka undangan.</div></noscript>
     <script>
-      const invitationConfig = ${escapeInlineJson(standaloneConfig)};
-      const frame = document.getElementById('invitationFrame');
-      const sendConfig = () => {
-        frame.contentWindow.postMessage({
-          type: 'INVITATION_CONFIG',
-          config: invitationConfig
-        }, '${window.location.origin}');
-      };
-      frame.addEventListener('load', sendConfig);
-      window.addEventListener('message', (event) => {
-        if (event.origin === '${window.location.origin}' && event.data?.type === 'REQUEST_INVITATION_CONFIG') {
-          sendConfig();
-        }
-      });
+      window.__INVITATION_STANDALONE__ = true;
+      window.__INVITATION_CONFIG__ = ${escapeInlineJson(standaloneConfig)};
     </script>
+    ${assets.scripts.map((asset) => `<script type="module" crossorigin src="/${asset.name}"></script>`).join('\n    ')}
   </body>
 </html>`;
+};
+
+const getAssetNameFromUrl = (url) => {
+  const assetUrl = new URL(url, window.location.href);
+  return assetUrl.pathname.replace(/^\/+/, '');
+};
+
+const getCurrentBuildAssetUrls = () => {
+  const urls = [
+    ...Array.from(document.querySelectorAll('link[rel="stylesheet"][href]')).map((node) => node.href),
+    ...Array.from(document.querySelectorAll('script[type="module"][src]')).map((node) => node.src),
+  ].filter((url) => {
+    const assetUrl = new URL(url, window.location.href);
+    return assetUrl.origin === window.location.origin && assetUrl.pathname.startsWith('/assets/');
+  });
+
+  if (!urls.length) {
+    const error = new Error('Production assets not found');
+    error.code = 'PRODUCTION_ASSETS_NOT_FOUND';
+    throw error;
+  }
+
+  return urls;
+};
+
+const extractRelativeAssetUrls = (content, baseUrl) => {
+  const assetUrls = [];
+  const assetPattern = /["'](\.\/[^"']+\.(?:js|css|woff2?|png|jpe?g|svg|webp|gif))["']/gi;
+  let match = assetPattern.exec(content);
+
+  while (match) {
+    assetUrls.push(new URL(match[1], baseUrl).toString());
+    match = assetPattern.exec(content);
+  }
+
+  return assetUrls;
+};
+
+const collectStandaloneAssets = async () => {
+  const queuedUrls = [...getCurrentBuildAssetUrls()];
+  const seenUrls = new Set();
+  const assets = [];
+
+  while (queuedUrls.length) {
+    const url = queuedUrls.shift();
+    if (seenUrls.has(url)) continue;
+    seenUrls.add(url);
+
+    const response = await fetch(url);
+    if (!response.ok) {
+      const error = new Error(`Failed to fetch asset ${url}`);
+      error.code = 'ASSET_FETCH_FAILED';
+      throw error;
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    const name = getAssetNameFromUrl(url);
+    assets.push({
+      bytes,
+      contentType,
+      isScript: name.endsWith('.js'),
+      isStyle: name.endsWith('.css'),
+      name,
+    });
+
+    if (name.endsWith('.js') || name.endsWith('.css')) {
+      const content = new TextDecoder().decode(bytes);
+      extractRelativeAssetUrls(content, url).forEach((assetUrl) => {
+        if (!seenUrls.has(assetUrl)) queuedUrls.push(assetUrl);
+      });
+    }
+  }
+
+  return {
+    files: assets,
+    scripts: assets.filter((asset) => asset.isScript && getCurrentBuildAssetUrls().includes(new URL(`/${asset.name}`, window.location.origin).toString())),
+    styles: assets.filter((asset) => asset.isStyle && getCurrentBuildAssetUrls().includes(new URL(`/${asset.name}`, window.location.origin).toString())),
+  };
 };
 
 const downloadBlob = (blob, filename) => {
@@ -154,7 +218,8 @@ const downloadBlob = (blob, filename) => {
 
 export const downloadStandaloneInvitationHtml = async (config, filename = 'index.html') => {
   const { standaloneConfig } = await prepareStandaloneConfig(config);
-  const html = buildStandaloneInvitationHtml(standaloneConfig);
+  const assets = await collectStandaloneAssets();
+  const html = buildStandaloneInvitationHtml(standaloneConfig, assets);
   const blob = new Blob([html], { type: 'text/html' });
   downloadBlob(blob, filename);
 };
@@ -200,6 +265,12 @@ const concatBytes = (chunks) => {
   return output;
 };
 
+const toZipBytes = (content, encoder) => {
+  if (content instanceof Uint8Array) return content;
+  if (content instanceof ArrayBuffer) return new Uint8Array(content);
+  return encoder.encode(content);
+};
+
 const createZipBlob = (files) => {
   const encoder = new TextEncoder();
   const chunks = [];
@@ -208,7 +279,7 @@ const createZipBlob = (files) => {
 
   files.forEach((file) => {
     const nameBytes = encoder.encode(file.name);
-    const dataBytes = encoder.encode(file.content);
+    const dataBytes = toZipBytes(file.content, encoder);
     const checksum = crc32(dataBytes);
     const localHeader = new Uint8Array(30 + nameBytes.length);
 
@@ -255,9 +326,11 @@ const createZipBlob = (files) => {
 
 export const downloadStandaloneInvitationZip = async (config, filename = 'undangan-cloudflare.zip') => {
   const { metadata, standaloneConfig } = await prepareStandaloneConfig(config);
-  const html = buildStandaloneInvitationHtml(standaloneConfig);
+  const assets = await collectStandaloneAssets();
+  const html = buildStandaloneInvitationHtml(standaloneConfig, assets);
   const zip = createZipBlob([
     { name: 'index.html', content: html },
+    ...assets.files.map((asset) => ({ name: asset.name, content: asset.bytes })),
     { name: '_redirects', content: '/* /index.html 200\n' },
     {
       name: '_headers',

@@ -253,6 +253,14 @@ export default function BuilderPage() {
         setStatus('Musik import tidak ditemukan di browser ini. Import ulang audio, lalu klik Paket Cloudflare lagi.');
         return;
       }
+      if (error.code === 'PRODUCTION_ASSETS_NOT_FOUND') {
+        setStatus('Paket Cloudflare harus dibuat dari builder yang sudah dideploy, bukan dari mode development.');
+        return;
+      }
+      if (error.code === 'ASSET_FETCH_FAILED') {
+        setStatus('Gagal mengambil asset app untuk paket. Refresh builder lalu klik Paket Cloudflare lagi.');
+        return;
+      }
       setStatus('Gagal membuat file subdomain. Coba import audio lagi atau gunakan file lebih kecil.');
     }
   };

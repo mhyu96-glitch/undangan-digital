@@ -15,6 +15,7 @@ export default function App() {
   const path = normalizePath(window.location.pathname);
   const params = new URLSearchParams(window.location.search);
   const forceInvite = params.get('mode') === 'invite';
+  const forceStandaloneInvite = Boolean(window.__INVITATION_STANDALONE__);
   const waitsForMessageConfig = params.get('source') === 'message';
   const initialConfig = useMemo(() => getActiveInvitationConfig(), []);
   const [messageConfig, setMessageConfig] = useState(null);
@@ -42,7 +43,7 @@ export default function App() {
     return <BabyInvitation config={config} />;
   };
 
-  if (forceInvite || path === '/invite' || path === '/undangan') {
+  if (forceStandaloneInvite || forceInvite || path === '/invite' || path === '/undangan') {
     return renderInvitation();
   }
 

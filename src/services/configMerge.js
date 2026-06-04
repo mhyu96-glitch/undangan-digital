@@ -29,6 +29,9 @@ export const mergeConfig = (base, override) => {
 
 export const getActiveInvitationConfig = () => {
   if (typeof window === 'undefined') return cloneConfig(defaultInvitationConfig);
+  if (window.__INVITATION_CONFIG__) {
+    return mergeConfig(defaultInvitationConfig, window.__INVITATION_CONFIG__);
+  }
   const publicConfig = loadPublicConfigFromUrl();
   if (publicConfig) return mergeConfig(defaultInvitationConfig, publicConfig);
   return mergeConfig(defaultInvitationConfig, loadBuilderDraft());
