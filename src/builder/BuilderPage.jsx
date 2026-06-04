@@ -639,7 +639,7 @@ export default function BuilderPage() {
                     ) : null}
                     {isIndexedAudioUrl(config.media.musicUrl) || config.media.musicUrl?.startsWith('data:audio/') ? (
                       <p className="rounded-2xl bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-800">
-                        Audio import akan jalan untuk preview dan Buka undangan di browser ini. Untuk subdomain, klik File Subdomain agar musik ikut masuk ke file HTML.
+                        Audio import akan jalan untuk preview dan Buka undangan di browser ini. Untuk Cloudflare Pages, klik Paket Cloudflare agar musik ikut masuk ke paket upload.
                       </p>
                     ) : null}
                     {config.media.musicUrl && isSoundCloudUrl(config.media.musicUrl) ? (
@@ -899,13 +899,18 @@ export default function BuilderPage() {
           ) : null}
         </section>
 
-        <LivePreview config={config} onCopyPublicUrl={handleCopyPublicUrl} publicUrl={publicUrl} />
+        <LivePreview
+          config={config}
+          onCopyPublicUrl={handleCopyPublicUrl}
+          onDownloadPackage={handleDownloadStandaloneHtml}
+          publicUrl={publicUrl}
+        />
       </div>
     </main>
   );
 }
 
-function LivePreview({ config, onCopyPublicUrl, publicUrl }) {
+function LivePreview({ config, onCopyPublicUrl, onDownloadPackage, publicUrl }) {
   const isClassic = config.template === 'classic-marine';
   const previewKey = `${config.template}-${config.theme}-${config.animation?.preset}-${config.animation?.intensity}`;
   const activePublicUrl = publicUrl || createPublicInvitationUrl(config);
@@ -944,6 +949,10 @@ function LivePreview({ config, onCopyPublicUrl, publicUrl }) {
             <button className="builder-button w-full" type="button" onClick={onCopyPublicUrl}>
               <Copy size={16} />
               Salin link konsumen
+            </button>
+            <button className="builder-button w-full border-sky-200 bg-sky-50 text-sky-900" type="button" onClick={onDownloadPackage}>
+              <Download size={16} />
+              Download Paket Cloudflare
             </button>
           </div>
         </div>
