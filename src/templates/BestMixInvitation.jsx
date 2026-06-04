@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { getGuestNameFromUrl } from '../services/guestName.js';
 import { createObjectUrlFromIndexedAudio, isIndexedAudioUrl } from '../services/audioStorage.js';
-import { getSoundCloudEmbedUrl, isDirectAudioUrl, isSoundCloudUrl } from '../services/mediaUrl.js';
+import { getSoundCloudEmbedUrl, isDirectAudioUrl, isSoundCloudUrl, normalizeImageUrl } from '../services/mediaUrl.js';
 
 const navItems = [
   { id: 'cover', label: 'Cover', icon: Sparkles, section: 'cover' },
@@ -91,10 +91,21 @@ function useCountdown(schedule) {
   return timeLeft;
 }
 
-function OceanBackground() {
+function OceanBackground({ imageUrl = '' }) {
+  const normalizedImageUrl = normalizeImageUrl(imageUrl);
+
   return (
     <div className="absolute inset-0 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-[#00daf3] via-[#0070ea] to-[#006875]" />
+      {normalizedImageUrl ? (
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-42 mix-blend-soft-light"
+          style={{ backgroundImage: `url("${normalizedImageUrl}")` }}
+        />
+      ) : null}
+      {normalizedImageUrl ? (
+        <div className="absolute inset-0 bg-gradient-to-b from-[#00daf3]/45 via-[#0070ea]/58 to-[#006875]/82" />
+      ) : null}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_8%,rgba(255,255,255,0.76),transparent_42%)] opacity-70" />
       <div className="best-bubble absolute left-[12%] top-[18%] h-5 w-5 rounded-full bg-white/35 blur-[1px]" />
       <div className="best-bubble absolute left-[72%] top-[64%] h-7 w-7 rounded-full bg-white/24 blur-[1px] [animation-delay:1.7s]" />
@@ -398,7 +409,7 @@ export default function BestMixInvitation({ config, preview = false }) {
       }`}
     >
       <BestMixStyles />
-      <OceanBackground />
+      <OceanBackground imageUrl={config.media.backgroundImage} />
 
       {toast ? (
         <div className="fixed left-1/2 top-7 z-[80] -translate-x-1/2 rounded-full bg-white px-5 py-2 text-xs font-black text-[#006875] shadow-lg">

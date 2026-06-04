@@ -8,6 +8,23 @@ export const isDirectAudioUrl = (url = '') =>
 export const isSoundCloudUrl = (url = '') =>
   /^https?:\/\/(www\.)?soundcloud\.com\//i.test(url.trim());
 
+export const normalizeImageUrl = (url = '') => {
+  const trimmedUrl = url.trim();
+  if (!trimmedUrl) return '';
+
+  const imgurMatch = trimmedUrl.match(/^https?:\/\/(?:www\.)?imgur\.com\/([a-zA-Z0-9]+)$/);
+  if (imgurMatch) {
+    return `https://i.imgur.com/${imgurMatch[1]}.jpeg`;
+  }
+
+  const imgurDirectWithoutExtension = trimmedUrl.match(/^https?:\/\/i\.imgur\.com\/([a-zA-Z0-9]+)$/);
+  if (imgurDirectWithoutExtension) {
+    return `https://i.imgur.com/${imgurDirectWithoutExtension[1]}.jpeg`;
+  }
+
+  return trimmedUrl;
+};
+
 export const getSoundCloudEmbedUrl = (url = '') => {
   if (!isSoundCloudUrl(url)) return '';
   const params = new URLSearchParams({

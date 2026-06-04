@@ -32,7 +32,7 @@ import {
   loadBuilderDraft,
   saveBuilderDraft,
 } from '../services/configStorage.js';
-import { getSoundCloudEmbedUrl, isDirectAudioUrl, isSoundCloudUrl } from '../services/mediaUrl.js';
+import { getSoundCloudEmbedUrl, isDirectAudioUrl, isSoundCloudUrl, normalizeImageUrl } from '../services/mediaUrl.js';
 import BestMixInvitation from '../templates/BestMixInvitation.jsx';
 
 const cloneConfig = (config) => JSON.parse(JSON.stringify(config));
@@ -531,12 +531,20 @@ export default function BuilderPage() {
             >
               <div className="builder-grid">
                 <BuilderField label="Background image URL">
-                  <input
-                    className="builder-input"
-                    placeholder="https://..."
-                    value={config.media.backgroundImage || ''}
-                    onChange={(event) => setField('media.backgroundImage', event.target.value)}
-                  />
+                  <div className="grid gap-3">
+                    <input
+                      className="builder-input"
+                      placeholder="https://..."
+                      value={config.media.backgroundImage || ''}
+                      onChange={(event) => setField('media.backgroundImage', event.target.value)}
+                    />
+                    {config.media.backgroundImage ? (
+                      <div
+                        className="h-28 rounded-[22px] border border-white/70 bg-cover bg-center shadow-inner"
+                        style={{ backgroundImage: `url("${normalizeImageUrl(config.media.backgroundImage)}")` }}
+                      />
+                    ) : null}
+                  </div>
                 </BuilderField>
                 <BuilderField label="Cover image URL">
                   <input
