@@ -1,4 +1,5 @@
 export const isDirectAudioUrl = (url = '') =>
+  /^data:audio\//i.test(url.trim()) ||
   /\.(mp3|wav|ogg|m4a|aac)(\?.*)?$/i.test(url.trim());
 
 export const isSoundCloudUrl = (url = '') =>

@@ -216,6 +216,20 @@ export default function BuilderPage() {
     }
   };
 
+  const handleImportMusic = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setField('media.musicUrl', reader.result);
+      setStatus(`Musik "${file.name}" diimport. Klik Simpan sebelum buka undangan.`);
+    };
+    reader.onerror = () => setStatus('Gagal import musik. Coba file audio lain.');
+    reader.readAsDataURL(file);
+    event.target.value = '';
+  };
+
   const setGiftAccountField = (index, field, value) => {
     setConfig((currentConfig) => {
       const next = cloneConfig(currentConfig);
@@ -528,16 +542,28 @@ export default function BuilderPage() {
                 </BuilderField>
                 <BuilderField className="sm:col-span-2" label="Music URL">
                   <div className="grid gap-3">
-                    <input
-                      className="builder-input"
-                      placeholder="https://...mp3 atau https://soundcloud.com/..."
-                      value={config.media.musicUrl}
-                      onChange={(event) => setField('media.musicUrl', event.target.value)}
-                    />
+                    <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                      <input
+                        className="builder-input"
+                        placeholder="https://...mp3 atau https://soundcloud.com/..."
+                        value={config.media.musicUrl?.startsWith('data:audio/') ? 'Audio import tersimpan di draft' : config.media.musicUrl}
+                        onChange={(event) => setField('media.musicUrl', event.target.value)}
+                      />
+                      <label className="builder-button cursor-pointer">
+                        <Upload size={16} />
+                        Import audio
+                        <input className="sr-only" type="file" accept="audio/*" onChange={handleImportMusic} />
+                      </label>
+                    </div>
                     {config.media.musicUrl && isDirectAudioUrl(config.media.musicUrl) ? (
                       <audio className="w-full" controls key={config.media.musicUrl} src={config.media.musicUrl}>
                         <track kind="captions" />
                       </audio>
+                    ) : null}
+                    {config.media.musicUrl?.startsWith('data:audio/') ? (
+                      <p className="rounded-2xl bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-800">
+                        Audio import akan jalan untuk preview dan Buka undangan di browser ini. Untuk link konsumen, file besar sebaiknya diupload sebagai URL mp3.
+                      </p>
                     ) : null}
                     {config.media.musicUrl && isSoundCloudUrl(config.media.musicUrl) ? (
                       <iframe
@@ -820,7 +846,7 @@ function LivePreview({ config, onCopyPublicUrl, publicUrl }) {
           </div>
           <a
             className="builder-pill text-sky-800"
-            href={activePublicUrl}
+            href="/invite"
             onClick={() => saveBuilderDraft(config)}
             target="_blank"
             rel="noopener noreferrer"
