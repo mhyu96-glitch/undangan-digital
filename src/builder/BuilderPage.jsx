@@ -32,7 +32,7 @@ import {
   clearBuilderDraft,
   createLocalInvitationUrl,
   createPublicInvitationUrl,
-  downloadStandaloneInvitationHtml,
+  downloadStandaloneInvitationZip,
   downloadConfigJson,
   loadBuilderDraft,
   saveBuilderDraft,
@@ -216,9 +216,9 @@ export default function BuilderPage() {
   const handleDownloadStandaloneHtml = async () => {
     try {
       saveBuilderDraft(config);
-      setStatus('Menyiapkan file index.html dengan musik...');
-      await downloadStandaloneInvitationHtml(config);
-      setStatus('File index.html undangan siap untuk subdomain');
+      setStatus('Menyiapkan paket Cloudflare Pages...');
+      await downloadStandaloneInvitationZip(config);
+      setStatus('Paket undangan-cloudflare.zip siap diupload ke Cloudflare Pages');
     } catch {
       setStatus('Gagal membuat file subdomain. Coba import audio lagi atau gunakan file lebih kecil.');
     }
@@ -335,7 +335,7 @@ export default function BuilderPage() {
             </button>
             <button className="builder-button" type="button" onClick={handleDownloadStandaloneHtml}>
               <Download size={16} />
-              File Subdomain
+              Paket Cloudflare
             </button>
             <label className="builder-button cursor-pointer">
               <Upload size={16} />

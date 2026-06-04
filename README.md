@@ -84,9 +84,9 @@ Di `/builder`:
 
 - Klik `Simpan` untuk menyimpan draft lokal dan membuat link konsumen.
 - Klik `Buka undangan` untuk melihat undangan dari draft lokal.
-- Klik `File Subdomain` untuk mengunduh `index.html` yang bisa diupload ke subdomain atau Cloudflare Pages project khusus konsumen.
+- Klik `Paket Cloudflare` untuk mengunduh `undangan-cloudflare.zip` yang bisa diupload langsung ke Cloudflare Pages project khusus konsumen.
 
-Audio bisa memakai URL langsung seperti `.mp3`, link SoundCloud, atau `Import audio`. Jika memakai `Import audio`, file audio ikut masuk ke file subdomain sehingga tidak perlu hosting MP3 terpisah. Untuk file audio besar, ukuran `index.html` juga akan ikut besar.
+Audio bisa memakai URL langsung seperti `.mp3`, link SoundCloud, atau `Import audio`. Jika memakai `Import audio`, file audio ikut masuk ke paket Cloudflare sehingga tidak perlu hosting MP3 terpisah. Untuk file audio besar, ukuran paket juga akan ikut besar.
 
 ## Scripts
 
