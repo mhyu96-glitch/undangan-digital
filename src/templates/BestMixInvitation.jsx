@@ -95,6 +95,9 @@ const getTextStyle = (settings = {}, fallback = {}) => ({
   textAlign: settings.align || fallback.align || 'center',
 });
 
+const getUniqueImageUrls = (urls) =>
+  [...new Set(urls.map((url) => normalizeImageUrl(url || '')).filter(Boolean))];
+
 const getTargetDate = (schedule) => new Date(`${schedule.date}T${schedule.time}:00`).getTime();
 
 function useCountdown(schedule) {
@@ -270,12 +273,39 @@ function BestMixStyles() {
 
       .best-nav-item {
         color: rgba(255, 255, 255, 0.74);
+        transition: color 220ms ease, background 220ms ease, transform 220ms ease;
       }
 
       .best-nav-icon-active {
         background: linear-gradient(135deg, #f5cd00, #00e5ff);
         color: #001f24;
         box-shadow: 0 8px 20px rgba(0, 229, 255, 0.28);
+      }
+
+      .best-section-shell {
+        animation: bestSectionIn 260ms ease both;
+        will-change: opacity, transform;
+      }
+
+      .best-section-switching {
+        animation-duration: 210ms;
+      }
+
+      @keyframes bestSectionIn {
+        from { opacity: 0; transform: translate3d(0, 12px, 0); }
+        to { opacity: 1; transform: translate3d(0, 0, 0); }
+      }
+
+      @media (max-width: 640px) {
+        .best-glass {
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          box-shadow: 0 12px 28px rgba(0, 89, 187, 0.12);
+        }
+
+        .best-bubble {
+          display: none;
+        }
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -328,6 +358,7 @@ export default function BestMixInvitation({ config, preview = false }) {
   const [formStatus, setFormStatus] = useState('Hadir');
   const [formName, setFormName] = useState('');
   const [formMessage, setFormMessage] = useState('');
+  const [isSwitchingSection, setIsSwitchingSection] = useState(false);
   const [wishes, setWishes] = useState([
     {
       name: 'Keluarga Besar Baiman',
@@ -341,8 +372,22 @@ export default function BestMixInvitation({ config, preview = false }) {
     },
   ]);
   const audioRef = useRef(null);
+  const mainRef = useRef(null);
   const resolvedAudioUrlRef = useRef('');
   const gallery = useMemo(() => config.media.gallery || [], [config.media.gallery]);
+  const fallbackImage = normalizeImageUrl(config.media.fallbackImage || config.media.coverImage || config.media.profileImage);
+  const getImageSrc = (url) => normalizeImageUrl(url || fallbackImage);
+  const preloadImageUrls = useMemo(
+    () =>
+      getUniqueImageUrls([
+        config.media.profileImage,
+        config.media.coverImage,
+        config.media.backgroundImage,
+        ...(config.media.gallery || []),
+        config.media.fallbackImage,
+      ]),
+    [config.media],
+  );
   const musicUrl = config.media.musicUrl || '';
   const hasDirectAudio = isDirectAudioUrl(musicUrl);
   const hasSoundCloudAudio = isSoundCloudUrl(musicUrl);
@@ -364,10 +409,18 @@ export default function BestMixInvitation({ config, preview = false }) {
     align: 'center',
   });
   const handleImageError = (event) => {
-    if (event.currentTarget.src !== config.media.fallbackImage) {
-      event.currentTarget.src = config.media.fallbackImage;
-    }
+    if (!fallbackImage || event.currentTarget.dataset.fallbackApplied === 'true') return;
+    event.currentTarget.dataset.fallbackApplied = 'true';
+    event.currentTarget.src = fallbackImage;
   };
+
+  useEffect(() => {
+    preloadImageUrls.slice(0, 8).forEach((url) => {
+      const image = new Image();
+      image.decoding = 'async';
+      image.src = url;
+    });
+  }, [preloadImageUrls]);
 
   useEffect(() => {
     setGuestName(getGuestNameFromUrl(config.guest?.defaultName || 'Bapak/Ibu/Saudara/i'));
@@ -416,6 +469,14 @@ export default function BestMixInvitation({ config, preview = false }) {
       return;
     }
     audioRef.current.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+  };
+
+  const goToSection = (sectionId) => {
+    if (sectionId === activeSection) return;
+    setIsSwitchingSection(true);
+    setActiveSection(sectionId);
+    mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    window.setTimeout(() => setIsSwitchingSection(false), 240);
   };
 
   const copyAccount = async (account) => {
@@ -483,7 +544,8 @@ export default function BestMixInvitation({ config, preview = false }) {
             <img
               alt=""
               className="h-full w-full object-cover"
-              src={config.media.profileImage || config.media.coverImage}
+              decoding="async"
+              src={getImageSrc(config.media.profileImage || config.media.coverImage)}
               onError={handleImageError}
             />
           </div>
@@ -494,8 +556,9 @@ export default function BestMixInvitation({ config, preview = false }) {
         </button>
       </header>
 
-      <main className={`no-scrollbar relative z-10 overflow-y-auto px-6 pb-28 pt-24 ${preview ? 'h-full' : 'h-screen'}`}>
+      <main ref={mainRef} className={`no-scrollbar relative z-10 overflow-y-auto px-6 pb-28 pt-24 ${preview ? 'h-full' : 'h-screen'}`}>
         <div className={liveAnimationClass} style={liveAnimationStyle}>
+          <div key={`${isOpen ? 'open' : 'cover'}-${activeSection}`} className={`best-section-shell ${isSwitchingSection ? 'best-section-switching' : ''}`}>
           {!isOpen ? (
             <section className="flex min-h-[calc(100vh-152px)] flex-col items-center justify-center text-center">
             <div className="best-glass mb-6 inline-flex rounded-full p-4 best-float">
@@ -524,7 +587,9 @@ export default function BestMixInvitation({ config, preview = false }) {
                 <img
                   alt=""
                   className="aspect-[4/3] w-full rounded-[24px] object-cover"
-                  src={config.media.coverImage}
+                  decoding="async"
+                  fetchPriority="high"
+                  src={getImageSrc(config.media.coverImage)}
                   onError={handleImageError}
                 />
               </div>
@@ -540,7 +605,9 @@ export default function BestMixInvitation({ config, preview = false }) {
                 <img
                   alt=""
                   className="h-full w-full rounded-full object-cover"
-                  src={config.media.profileImage}
+                  decoding="async"
+                  fetchPriority="high"
+                  src={getImageSrc(config.media.profileImage)}
                   onError={handleImageError}
                 />
               </div>
@@ -626,13 +693,14 @@ export default function BestMixInvitation({ config, preview = false }) {
                     <img
                       alt=""
                       className="h-full w-full rounded-2xl object-cover"
-                      src={gallery[0] || config.media.coverImage}
+                      decoding="async"
+                      src={getImageSrc(gallery[0] || config.media.coverImage)}
                       onError={handleImageError}
                     />
                   </div>
                   {gallery.slice(1, 3).map((src) => (
                     <div key={src} className="best-glass aspect-square overflow-hidden rounded-[22px] p-2">
-                      <img alt="" className="h-full w-full rounded-2xl object-cover" src={src} onError={handleImageError} />
+                      <img alt="" className="h-full w-full rounded-2xl object-cover" decoding="async" src={getImageSrc(src)} onError={handleImageError} />
                     </div>
                   ))}
                 </div>
@@ -756,6 +824,7 @@ export default function BestMixInvitation({ config, preview = false }) {
             ) : null}
             </section>
           ) : null}
+          </div>
         </div>
       </main>
 
@@ -772,9 +841,9 @@ export default function BestMixInvitation({ config, preview = false }) {
             return (
               <button
                 key={item.id}
-                className="best-nav-item flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl text-[10px] font-bold transition hover:bg-white/10 active:scale-95"
+                className={`best-nav-item flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl text-[10px] font-bold hover:bg-white/10 active:scale-95 ${active ? 'text-white' : ''}`}
                 type="button"
-                onClick={() => setActiveSection(item.id)}
+                onClick={() => goToSection(item.id)}
               >
                 <span className={active ? 'best-nav-icon-active rounded-2xl p-2.5' : 'p-2.5'}>
                   <Icon size={17} />

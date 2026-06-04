@@ -139,8 +139,7 @@ html {
 
 /* Improve image loading */
 img {
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
+  image-rendering: auto;
 }
 
 /* Better text rendering */
