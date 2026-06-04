@@ -9,6 +9,7 @@ import defaultInvitationConfig from './src/config/defaultInvitationConfig.js';
 import { getInvitationTheme } from './src/config/themes.js';
 import { loadBuilderDraft } from './src/services/configStorage.js';
 import { getGuestNameFromUrl } from './src/services/guestName.js';
+import { getSoundCloudEmbedUrl, isDirectAudioUrl, isSoundCloudUrl } from './src/services/mediaUrl.js';
 
 // === CONFIGURATION & DATA CONSTANTS ===
 const cloneConfig = (config) => JSON.parse(JSON.stringify(config));
@@ -537,6 +538,8 @@ export default function BabyInvitation({ config: providedConfig = null }) {
   const fallbackImage = config.media?.fallbackImage || defaultInvitationConfig.media.fallbackImage;
   const galleryPhotos = getGalleryPhotos(config);
   const audioUrl = config.media?.musicUrl || '';
+  const hasDirectAudio = isDirectAudioUrl(audioUrl);
+  const hasSoundCloudAudio = isSoundCloudUrl(audioUrl);
   const firstAvailableTab =
     [
       config.sections?.cover && 'opening',
@@ -596,7 +599,7 @@ export default function BabyInvitation({ config: providedConfig = null }) {
     setGuestName(getGuestNameFromUrl(config.guest?.defaultName || defaultInvitationConfig.guest.defaultName));
 
     // Setup audio
-    if (audioUrl) {
+    if (hasDirectAudio) {
       audioRef.current = new Audio(audioUrl);
       audioRef.current.loop = true;
     }
@@ -604,7 +607,7 @@ export default function BabyInvitation({ config: providedConfig = null }) {
     return () => {
       audioRef.current?.pause();
     };
-  }, [audioUrl, config.guest?.defaultName]);
+  }, [audioUrl, config.guest?.defaultName, hasDirectAudio]);
 
   // Event handlers
   const showToast = (message) => {
@@ -692,7 +695,7 @@ export default function BabyInvitation({ config: providedConfig = null }) {
       )}
 
       {/* Audio Controller */}
-      {isOpen && audioUrl && (
+      {isOpen && hasDirectAudio && (
         <button 
           onClick={handleToggleAudio}
           className="invitation-icon-button invitation-floating-audio fixed bottom-24 z-50"
@@ -706,6 +709,17 @@ export default function BabyInvitation({ config: providedConfig = null }) {
             <VolumeX size={20} className="text-slate-400" />
           )}
         </button>
+      )}
+
+      {isOpen && hasSoundCloudAudio && (
+        <div className="fixed left-1/2 bottom-24 z-50 w-[calc(100%-32px)] max-w-sm -translate-x-1/2 overflow-hidden rounded-2xl border border-white/50 bg-white/80 p-1 shadow-xl backdrop-blur-xl">
+          <iframe
+            className="h-20 w-full rounded-xl border-0"
+            title="SoundCloud music"
+            src={getSoundCloudEmbedUrl(audioUrl)}
+            allow="autoplay"
+          />
+        </div>
       )}
 
       <AnimatePresence mode="wait">

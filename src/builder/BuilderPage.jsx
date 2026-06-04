@@ -29,6 +29,7 @@ import {
   loadBuilderDraft,
   saveBuilderDraft,
 } from '../services/configStorage.js';
+import { getSoundCloudEmbedUrl, isDirectAudioUrl, isSoundCloudUrl } from '../services/mediaUrl.js';
 import BestMixInvitation from '../templates/BestMixInvitation.jsx';
 
 const cloneConfig = (config) => JSON.parse(JSON.stringify(config));
@@ -159,6 +160,7 @@ export default function BuilderPage() {
 
   const setField = (path, value) => {
     setConfig((currentConfig) => updateByPath(currentConfig, path, value));
+    setPublicUrl('');
     setStatus('Preview diperbarui realtime');
   };
 
@@ -172,7 +174,19 @@ export default function BuilderPage() {
   const handleCopyPublicUrl = async () => {
     const nextPublicUrl = publicUrl || createPublicInvitationUrl(config);
     setPublicUrl(nextPublicUrl);
-    await navigator.clipboard.writeText(nextPublicUrl);
+    try {
+      await navigator.clipboard.writeText(nextPublicUrl);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = nextPublicUrl;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      textarea.remove();
+    }
     setStatus('Link konsumen sudah disalin');
   };
 
@@ -211,6 +225,7 @@ export default function BuilderPage() {
       };
       return next;
     });
+    setPublicUrl('');
     setStatus('Preview diperbarui realtime');
   };
 
@@ -228,6 +243,7 @@ export default function BuilderPage() {
       ];
       return next;
     });
+    setPublicUrl('');
     setStatus('Rekening gift ditambahkan');
   };
 
@@ -237,6 +253,7 @@ export default function BuilderPage() {
       next.gift.accounts = (next.gift.accounts || []).filter((_, itemIndex) => itemIndex !== index);
       return next;
     });
+    setPublicUrl('');
     setStatus('Rekening gift dihapus');
   };
 
@@ -513,14 +530,27 @@ export default function BuilderPage() {
                   <div className="grid gap-3">
                     <input
                       className="builder-input"
-                      placeholder="https://...mp3"
+                      placeholder="https://...mp3 atau https://soundcloud.com/..."
                       value={config.media.musicUrl}
                       onChange={(event) => setField('media.musicUrl', event.target.value)}
                     />
-                    {config.media.musicUrl ? (
+                    {config.media.musicUrl && isDirectAudioUrl(config.media.musicUrl) ? (
                       <audio className="w-full" controls key={config.media.musicUrl} src={config.media.musicUrl}>
                         <track kind="captions" />
                       </audio>
+                    ) : null}
+                    {config.media.musicUrl && isSoundCloudUrl(config.media.musicUrl) ? (
+                      <iframe
+                        className="h-24 w-full rounded-2xl border-0"
+                        title="SoundCloud preview"
+                        src={getSoundCloudEmbedUrl(config.media.musicUrl)}
+                        allow="autoplay"
+                      />
+                    ) : null}
+                    {config.media.musicUrl && !isDirectAudioUrl(config.media.musicUrl) && !isSoundCloudUrl(config.media.musicUrl) ? (
+                      <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+                        Gunakan link audio langsung seperti .mp3, atau link SoundCloud.
+                      </p>
                     ) : null}
                   </div>
                 </BuilderField>
@@ -802,14 +832,15 @@ function LivePreview({ config, onCopyPublicUrl, publicUrl }) {
 
         <div className="mb-4 rounded-[22px] border border-white/70 bg-white/70 p-3 shadow-sm shadow-slate-200/70 backdrop-blur-xl">
           <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">Link Konsumen</p>
-          <div className="flex gap-2">
-            <input
-              className="builder-input min-w-0 flex-1 py-2 text-xs"
+          <div className="grid gap-2">
+            <textarea
+              className="builder-input min-h-24 resize-none text-xs leading-5"
               readOnly
               value={activePublicUrl}
             />
-            <button className="builder-button shrink-0 px-3" type="button" onClick={onCopyPublicUrl} aria-label="Copy link konsumen">
+            <button className="builder-button w-full" type="button" onClick={onCopyPublicUrl}>
               <Copy size={16} />
+              Salin link konsumen
             </button>
           </div>
         </div>

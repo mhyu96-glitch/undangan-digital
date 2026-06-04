@@ -21,6 +21,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { getGuestNameFromUrl } from '../services/guestName.js';
+import { getSoundCloudEmbedUrl, isDirectAudioUrl, isSoundCloudUrl } from '../services/mediaUrl.js';
 
 const navItems = [
   { id: 'cover', label: 'Cover', icon: Sparkles, section: 'cover' },
@@ -293,6 +294,9 @@ export default function BestMixInvitation({ config, preview = false }) {
   ]);
   const audioRef = useRef(null);
   const gallery = useMemo(() => config.media.gallery || [], [config.media.gallery]);
+  const musicUrl = config.media.musicUrl || '';
+  const hasDirectAudio = isDirectAudioUrl(musicUrl);
+  const hasSoundCloudAudio = isSoundCloudUrl(musicUrl);
   const liveAnimationClass = animationClassByPreset[config.animation?.preset] || '';
   const liveAnimationStyle = {
     '--best-live-duration': animationDurationByIntensity[config.animation?.intensity] || animationDurationByIntensity.normal,
@@ -306,13 +310,13 @@ export default function BestMixInvitation({ config, preview = false }) {
   useEffect(() => {
     setGuestName(getGuestNameFromUrl(config.guest?.defaultName || 'Bapak/Ibu/Saudara/i'));
 
-    if (!preview && config.media.musicUrl) {
-      audioRef.current = new Audio(config.media.musicUrl);
+    if (!preview && hasDirectAudio) {
+      audioRef.current = new Audio(musicUrl);
       audioRef.current.loop = true;
     }
 
     return () => audioRef.current?.pause();
-  }, [config.guest?.defaultName, config.media.musicUrl, preview]);
+  }, [config.guest?.defaultName, hasDirectAudio, musicUrl, preview]);
 
   const showToast = (message) => {
     setToast(message);
@@ -383,7 +387,7 @@ export default function BestMixInvitation({ config, preview = false }) {
         </div>
       ) : null}
 
-      {isOpen && config.media.musicUrl && !preview ? (
+      {isOpen && hasDirectAudio && !preview ? (
         <button
           className="fixed bottom-24 right-[max(20px,calc((100vw-28rem)/2+20px))] z-50 flex h-12 w-12 items-center justify-center rounded-full border border-white/35 bg-white/20 text-white shadow-lg backdrop-blur-xl active:scale-95"
           type="button"
@@ -618,6 +622,16 @@ export default function BestMixInvitation({ config, preview = false }) {
 
           {isOpen && activeSection === 'thanks' ? (
             <section className="space-y-6">
+            {hasSoundCloudAudio && !preview ? (
+              <div className="best-glass overflow-hidden rounded-[24px] p-2">
+                <iframe
+                  className="h-24 w-full rounded-[18px] border-0"
+                  title="SoundCloud music"
+                  src={getSoundCloudEmbedUrl(musicUrl)}
+                  allow="autoplay"
+                />
+              </div>
+            ) : null}
             {config.sections?.closing ? (
               <div className="best-glass relative overflow-hidden rounded-[30px] p-8 text-center">
                 <Star className="absolute -right-3 -top-3 h-20 w-20 text-[#f5cd00]/20 best-float" />
