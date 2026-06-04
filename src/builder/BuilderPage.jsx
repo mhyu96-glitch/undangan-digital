@@ -284,8 +284,8 @@ export default function BuilderPage() {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-7xl gap-5 px-4 py-5 xl:grid-cols-[220px_minmax(0,1fr)_360px]">
-        <aside className="builder-panel h-fit xl:sticky xl:top-5">
+      <div className="mx-auto grid max-w-7xl gap-5 px-4 py-5 lg:grid-cols-[190px_minmax(0,1fr)_320px] 2xl:grid-cols-[220px_minmax(0,1fr)_360px]">
+        <aside className="builder-panel h-fit lg:sticky lg:top-5">
           <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Editor</p>
           <nav className="grid gap-2">
             {builderSections.map((section) => {
@@ -778,7 +778,7 @@ function LivePreview({ config, onCopyPublicUrl, publicUrl }) {
   const activePublicUrl = publicUrl || createPublicInvitationUrl(config);
 
   return (
-    <aside className="xl:sticky xl:top-5 xl:self-start">
+    <aside className="lg:sticky lg:top-5 lg:self-start">
       <section className="builder-panel">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
@@ -814,12 +814,12 @@ function LivePreview({ config, onCopyPublicUrl, publicUrl }) {
           </div>
         </div>
 
-        <div className="mx-auto max-w-[312px]">
+        <div className="mx-auto max-w-[292px] 2xl:max-w-[312px]">
           <div className="rounded-[38px] border border-slate-900 bg-slate-950 p-2 shadow-[0_22px_60px_rgba(15,23,42,0.24)]">
             <div className="relative overflow-hidden rounded-[30px] border border-slate-800 bg-slate-900">
               <div className="pointer-events-none absolute left-1/2 top-2 z-50 h-5 w-24 -translate-x-1/2 rounded-full bg-slate-950" />
               <div className="pointer-events-none absolute right-3 top-3 z-50 h-2 w-2 rounded-full bg-slate-700" />
-              <div className="h-[640px] overflow-hidden">
+              <div className="h-[590px] overflow-hidden 2xl:h-[640px]">
                 {isClassic ? (
                   <BabyInvitation key={previewKey} config={config} />
                 ) : (
