@@ -525,8 +525,8 @@ const CountdownTimer = ({ schedule }) => {
   );
 };
 // === MAIN COMPONENT ===
-export default function BabyInvitation() {
-  const [config] = useState(getActiveInvitationConfig);
+export default function BabyInvitation({ config: providedConfig = null }) {
+  const config = providedConfig || getActiveInvitationConfig();
   const theme = getInvitationTheme(config.theme);
   const themeStyle = {
     '--invitation-primary': theme.primary,

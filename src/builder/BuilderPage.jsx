@@ -17,6 +17,7 @@ import {
   Upload,
   User,
 } from 'lucide-react';
+import BabyInvitation from '../../BabyInvitation.jsx';
 import defaultInvitationConfig from '../config/defaultInvitationConfig.js';
 import { getInvitationTheme, invitationThemes } from '../config/themes.js';
 import {
@@ -226,15 +227,22 @@ export default function BuilderPage() {
   };
 
   return (
-    <main className="min-h-screen w-full bg-[#eef4f8] text-slate-950">
-      <header className="border-b border-slate-200 bg-white">
+    <main className="min-h-screen w-full bg-[radial-gradient(circle_at_top_left,#ffffff_0,#eef7fb_34%,#e8edf4_100%)] text-slate-950">
+      <header className="border-b border-white/70 bg-white/55 shadow-sm shadow-slate-200/60 backdrop-blur-2xl">
         <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-5 lg:flex-row lg:items-center lg:justify-between">
-          <div>
+          <div className="flex items-start gap-4">
+            <div className="mt-1 hidden gap-2 sm:flex">
+              <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
+              <span className="h-3 w-3 rounded-full bg-[#ffbd2e]" />
+              <span className="h-3 w-3 rounded-full bg-[#28c840]" />
+            </div>
+            <div>
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-700">Digital Invitation</p>
             <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-950">Template Builder</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
               Atur konten, background, musik, tema, dan animasi. Preview di kanan langsung mengikuti perubahan.
             </p>
+            </div>
           </div>
           <div className="flex flex-wrap gap-2">
             <button className="builder-button" type="button" onClick={handleSaveDraft}>
@@ -275,7 +283,10 @@ export default function BuilderPage() {
                   key={section.id}
                   className={`builder-nav-button ${isActive ? 'builder-nav-button-active' : ''}`}
                   type="button"
-                  onClick={() => setActiveSection(section.id)}
+                  onClick={() => {
+                    setActiveSection(section.id);
+                    setStatus(`${section.label} aktif. Preview siap mengikuti edit.`);
+                  }}
                 >
                   <Icon size={17} />
                   {section.label}
@@ -285,7 +296,7 @@ export default function BuilderPage() {
           </nav>
           <div className="mt-5 border-t border-slate-200 pt-4 text-xs leading-5 text-slate-500">
             <p className="font-semibold text-slate-700">Status</p>
-            <p className="mt-1">{status}</p>
+            <p className="mt-1 rounded-2xl bg-white/70 px-3 py-2">{status}</p>
             {importError ? <p className="mt-2 text-red-600">{importError}</p> : null}
           </div>
         </aside>
@@ -533,9 +544,7 @@ export default function BuilderPage() {
                       return (
                         <button
                           key={item.id}
-                          className={`border p-4 text-left transition ${
-                            isSelected ? 'border-sky-500 bg-sky-50' : 'border-slate-200 bg-white hover:border-slate-300'
-                          }`}
+                          className={`builder-bento-card ${isSelected ? 'builder-bento-card-active' : ''}`}
                           type="button"
                           onClick={() => setField('template', item.id)}
                         >
@@ -554,9 +563,7 @@ export default function BuilderPage() {
                     return (
                       <button
                         key={item.id}
-                        className={`border p-4 text-left transition ${
-                          isSelected ? 'border-sky-500 bg-sky-50' : 'border-slate-200 bg-white hover:border-slate-300'
-                        }`}
+                        className={`builder-bento-card ${isSelected ? 'builder-bento-card-active' : ''}`}
                         type="button"
                         onClick={() => setField('theme', item.id)}
                       >
@@ -579,10 +586,10 @@ export default function BuilderPage() {
                       <Sparkles size={18} className="text-sky-700" />
                       Animation preset
                     </h3>
-                    <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                    <label className="builder-pill">
                       Intensity
                       <select
-                        className="builder-input min-w-32"
+                        className="min-w-28 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-900 outline-none"
                         value={config.animation?.intensity || 'normal'}
                         onChange={(event) => setField('animation.intensity', event.target.value)}
                       >
@@ -601,15 +608,13 @@ export default function BuilderPage() {
                       return (
                         <button
                           key={preset.id}
-                          className={`border p-4 text-left transition ${
-                            isSelected ? 'border-sky-500 bg-sky-50' : 'border-slate-200 bg-white hover:border-slate-300'
-                          }`}
+                          className={`builder-bento-card ${isSelected ? 'builder-bento-card-active' : ''}`}
                           type="button"
                           onClick={() => setField('animation.preset', preset.id)}
                         >
-                          <span className={`mb-3 block h-12 bg-slate-100 ${preset.className}`}>
+                          <span className={`mb-3 block h-12 overflow-hidden rounded-2xl bg-slate-100 ${preset.className}`}>
                             <span
-                              className="mx-auto block h-12 w-12"
+                              className="mx-auto block h-12 w-12 rounded-full"
                               style={{ backgroundColor: theme.accent }}
                             />
                           </span>
@@ -673,11 +678,11 @@ export default function BuilderPage() {
 
                 <div className="space-y-4">
                   {(config.gift.accounts || []).map((account, index) => (
-                    <div key={`${account.bank}-${index}`} className="border border-slate-200 bg-slate-50 p-4">
+                    <div key={`${account.bank}-${index}`} className="builder-bento-card">
                       <div className="mb-4 flex items-center justify-between gap-3">
                         <p className="text-sm font-bold text-slate-800">Rekening {index + 1}</p>
                         <button
-                          className="inline-flex min-h-9 items-center gap-2 border border-red-200 bg-white px-3 py-1.5 text-sm font-semibold text-red-700 transition hover:border-red-400 hover:bg-red-50"
+                          className="inline-flex min-h-9 items-center gap-2 rounded-full border border-red-200 bg-white px-3 py-1.5 text-sm font-semibold text-red-700 transition hover:border-red-400 hover:bg-red-50"
                           type="button"
                           onClick={() => handleRemoveGiftAccount(index)}
                         >
@@ -719,7 +724,7 @@ export default function BuilderPage() {
                   ))}
 
                   {config.gift.accounts?.length ? null : (
-                    <div className="border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-600">
+                    <div className="rounded-[22px] border border-dashed border-slate-300 bg-white/60 p-5 text-sm text-slate-600">
                       Belum ada rekening. Klik Tambah untuk membuat amplop digital.
                     </div>
                   )}
@@ -754,16 +759,22 @@ export default function BuilderPage() {
 }
 
 function LivePreview({ config }) {
+  const isClassic = config.template === 'classic-marine';
+  const previewKey = `${config.template}-${config.theme}-${config.animation?.preset}-${config.animation?.intensity}`;
+
   return (
     <aside className="xl:sticky xl:top-5 xl:self-start">
-      <section className="border border-slate-200 bg-white p-4 shadow-sm">
+      <section className="builder-panel">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Realtime</p>
             <h2 className="text-lg font-bold text-slate-950">Live Preview</h2>
+            <p className="mt-1 inline-flex rounded-full bg-slate-950 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+              {isClassic ? 'Classic Marine' : 'Best Mix'}
+            </p>
           </div>
           <a
-            className="text-sm font-semibold text-sky-700 hover:text-sky-950"
+            className="builder-pill text-sky-800"
             href="/invite"
             onClick={() => saveBuilderDraft(config)}
           >
@@ -777,7 +788,11 @@ function LivePreview({ config }) {
               <div className="pointer-events-none absolute left-1/2 top-2 z-50 h-5 w-24 -translate-x-1/2 rounded-full bg-slate-950" />
               <div className="pointer-events-none absolute right-3 top-3 z-50 h-2 w-2 rounded-full bg-slate-700" />
               <div className="h-[640px] overflow-hidden">
-                <BestMixInvitation config={config} preview />
+                {isClassic ? (
+                  <BabyInvitation key={previewKey} config={config} />
+                ) : (
+                  <BestMixInvitation key={previewKey} config={config} preview />
+                )}
               </div>
             </div>
           </div>
@@ -810,7 +825,7 @@ function BuilderField({ children, className = '', label }) {
 
 function ToggleField({ checked, label, onChange }) {
   return (
-    <label className="flex items-center justify-between gap-3 border border-slate-200 bg-white px-3 py-3 text-sm">
+    <label className="builder-toggle">
       <span className="font-semibold text-slate-700">{label}</span>
       <input
         checked={checked}
