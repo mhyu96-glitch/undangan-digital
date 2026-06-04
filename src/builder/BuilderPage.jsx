@@ -127,7 +127,25 @@ const fontOptions = [
   'Plus Jakarta Sans',
   'Inter',
   'Poppins',
+  'Montserrat',
+  'Nunito',
+  'Quicksand',
+  'Raleway',
+  'Lato',
+  'Roboto',
+  'Source Sans 3',
+  'Oswald',
   'Playfair',
+  'Cormorant Garamond',
+  'DM Serif Display',
+  'Libre Baskerville',
+  'Merriweather',
+  'Lora',
+  'Cinzel',
+  'Dancing Script',
+  'Great Vibes',
+  'Pacifico',
+  'Caveat',
   'Serif',
   'Mono',
 ];
@@ -1004,11 +1022,12 @@ function RichTextControls({ config, onChange, target, title }) {
           <span className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Font</span>
           <select
             className="builder-input"
+            style={{ fontFamily: settings.fontFamily }}
             value={settings.fontFamily || 'Plus Jakarta Sans'}
             onChange={(event) => onChange(`${path}.fontFamily`, event.target.value)}
           >
             {fontOptions.map((font) => (
-              <option key={font} value={font}>
+              <option key={font} value={font} style={{ fontFamily: font }}>
                 {font}
               </option>
             ))}
