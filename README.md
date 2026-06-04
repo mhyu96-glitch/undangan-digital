@@ -2,8 +2,7 @@
 
 Static React app untuk membuat dan menampilkan undangan digital reusable. App punya dua mode:
 
-- `/` redirect ke `/builder`.
-- `/builder` untuk mengatur konten, tema, media, lokasi, rekening, section, import, export, dan draft lokal.
+- `/` dan `/builder` untuk mengatur konten, tema, media, lokasi, rekening, section, import, export, dan draft lokal.
 - `/invite` atau `/undangan` untuk halaman undangan tamu.
 
 ## Features
