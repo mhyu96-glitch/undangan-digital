@@ -4,6 +4,24 @@ export const defaultInvitationConfig = {
   theme: 'marine',
   title: 'Undangan Aqiqah',
   subtitle: 'Dengan penuh kebahagiaan, kami mengundang Bapak/Ibu/Saudara/i',
+  typography: {
+    title: {
+      fontFamily: 'Plus Jakarta Sans',
+      fontSize: 40,
+      color: '#ffffff',
+      align: 'center',
+      bold: true,
+      italic: false,
+    },
+    subtitle: {
+      fontFamily: 'Plus Jakarta Sans',
+      fontSize: 14,
+      color: '#eafcff',
+      align: 'center',
+      bold: false,
+      italic: false,
+    },
+  },
   guest: {
     defaultName: 'Bapak/Ibu/Saudara/i',
   },

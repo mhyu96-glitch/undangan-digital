@@ -59,6 +59,24 @@ const animationDurationByIntensity = {
   lively: '3s',
 };
 
+const fontFamilyMap = {
+  'Plus Jakarta Sans': "'Plus Jakarta Sans', sans-serif",
+  Inter: 'Inter, system-ui, sans-serif',
+  Poppins: 'Poppins, system-ui, sans-serif',
+  Playfair: "'Playfair Display', Georgia, serif",
+  Serif: 'Georgia, serif',
+  Mono: "'Courier New', monospace",
+};
+
+const getTextStyle = (settings = {}, fallback = {}) => ({
+  color: settings.color || fallback.color,
+  fontFamily: fontFamilyMap[settings.fontFamily] || fontFamilyMap[fallback.fontFamily] || fontFamilyMap['Plus Jakarta Sans'],
+  fontSize: `${settings.fontSize || fallback.fontSize}px`,
+  fontStyle: settings.italic ? 'italic' : 'normal',
+  fontWeight: settings.bold ? 900 : 500,
+  textAlign: settings.align || fallback.align || 'center',
+});
+
 const getTargetDate = (schedule) => new Date(`${schedule.date}T${schedule.time}:00`).getTime();
 
 function useCountdown(schedule) {
@@ -314,6 +332,19 @@ export default function BestMixInvitation({ config, preview = false }) {
   const liveAnimationStyle = {
     '--best-live-duration': animationDurationByIntensity[config.animation?.intensity] || animationDurationByIntensity.normal,
   };
+  const titleStyle = getTextStyle(config.typography?.title, {
+    fontFamily: 'Plus Jakarta Sans',
+    fontSize: 40,
+    color: '#ffffff',
+    align: 'center',
+    bold: true,
+  });
+  const subtitleStyle = getTextStyle(config.typography?.subtitle, {
+    fontFamily: 'Plus Jakarta Sans',
+    fontSize: 14,
+    color: '#eafcff',
+    align: 'center',
+  });
   const handleImageError = (event) => {
     if (event.currentTarget.src !== config.media.fallbackImage) {
       event.currentTarget.src = config.media.fallbackImage;
@@ -455,11 +486,11 @@ export default function BestMixInvitation({ config, preview = false }) {
             <p className="mb-3 rounded-full bg-[#f5cd00] px-4 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#221b00]">
               Kepada {guestName}
             </p>
-            <h1 className="mb-6 text-4xl font-black leading-tight drop-shadow-lg">{config.title}</h1>
+            <h1 className="mb-6 leading-tight drop-shadow-lg" style={titleStyle}>{config.title}</h1>
             <div className="best-glass mb-8 rounded-[28px] p-7">
               <p className="text-lg italic leading-8 text-white/92">"Maka nikmat Tuhanmu yang manakah yang kamu dustakan?"</p>
               <div className="mx-auto my-5 h-px w-28 bg-white/30" />
-              <p className="text-sm leading-7 text-white/86">{config.subtitle}</p>
+              <p className="leading-7 text-white/86" style={subtitleStyle}>{config.subtitle}</p>
             </div>
             <button className="best-primary-button" type="button" onClick={openInvitation}>
               Buka Undangan
@@ -470,7 +501,7 @@ export default function BestMixInvitation({ config, preview = false }) {
 
           {isOpen && activeSection === 'cover' ? (
             <section className="flex min-h-[calc(100vh-208px)] flex-col justify-center space-y-5 text-center">
-              <h1 className="text-4xl font-black leading-tight">{config.title}</h1>
+              <h1 className="leading-tight" style={titleStyle}>{config.title}</h1>
               <div className="best-glass overflow-hidden rounded-[30px] p-2">
                 <img
                   alt=""
@@ -479,7 +510,7 @@ export default function BestMixInvitation({ config, preview = false }) {
                   onError={handleImageError}
                 />
               </div>
-              <p className="text-sm leading-7 text-white/82">{config.subtitle}</p>
+              <p className="leading-7 text-white/82" style={subtitleStyle}>{config.subtitle}</p>
             </section>
           ) : null}
 

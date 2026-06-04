@@ -1,5 +1,9 @@
 import { useMemo, useState } from 'react';
 import {
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
+  Bold,
   Calendar,
   Copy,
   Download,
@@ -7,6 +11,7 @@ import {
   Eye,
   Gift,
   Image,
+  Italic,
   LayoutTemplate,
   MapPin,
   Palette,
@@ -117,6 +122,21 @@ const animationIntensity = {
   normal: { label: 'Normal', duration: '4.5s' },
   lively: { label: 'Lively', duration: '3s' },
 };
+
+const fontOptions = [
+  'Plus Jakarta Sans',
+  'Inter',
+  'Poppins',
+  'Playfair',
+  'Serif',
+  'Mono',
+];
+
+const textAlignOptions = [
+  { id: 'left', icon: AlignLeft, label: 'Left' },
+  { id: 'center', icon: AlignCenter, label: 'Center' },
+  { id: 'right', icon: AlignRight, label: 'Right' },
+];
 
 const builderSections = [
   { id: 'basic', label: 'Basic', icon: Settings2 },
@@ -407,6 +427,18 @@ export default function BuilderPage() {
                   />
                 </BuilderField>
               </div>
+              <RichTextControls
+                config={config}
+                onChange={setField}
+                target="title"
+                title="Judul"
+              />
+              <RichTextControls
+                config={config}
+                onChange={setField}
+                target="subtitle"
+                title="Subtitle"
+              />
             </BuilderPanel>
           ) : null}
 
@@ -936,6 +968,95 @@ function BuilderField({ children, className = '', label }) {
       <span className="mb-1.5 block text-sm font-semibold text-slate-700">{label}</span>
       {children}
     </label>
+  );
+}
+
+function RichTextControls({ config, onChange, target, title }) {
+  const settings = config.typography?.[target] || {};
+  const path = `typography.${target}`;
+
+  return (
+    <div className="mt-5 rounded-[26px] border border-white/70 bg-white/60 p-4 shadow-sm shadow-slate-200/60">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h3 className="text-sm font-bold text-slate-900">{title} style</h3>
+        <div className="flex rounded-full bg-slate-100 p-1">
+          <button
+            className={`rounded-full p-2 ${settings.bold ? 'bg-white text-sky-800 shadow-sm' : 'text-slate-600'}`}
+            type="button"
+            onClick={() => onChange(`${path}.bold`, !settings.bold)}
+            aria-label={`${title} bold`}
+          >
+            <Bold size={16} />
+          </button>
+          <button
+            className={`rounded-full p-2 ${settings.italic ? 'bg-white text-sky-800 shadow-sm' : 'text-slate-600'}`}
+            type="button"
+            onClick={() => onChange(`${path}.italic`, !settings.italic)}
+            aria-label={`${title} italic`}
+          >
+            <Italic size={16} />
+          </button>
+        </div>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-[1fr_120px_96px]">
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Font</span>
+          <select
+            className="builder-input"
+            value={settings.fontFamily || 'Plus Jakarta Sans'}
+            onChange={(event) => onChange(`${path}.fontFamily`, event.target.value)}
+          >
+            {fontOptions.map((font) => (
+              <option key={font} value={font}>
+                {font}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Size</span>
+          <input
+            className="builder-input"
+            max="72"
+            min="10"
+            type="number"
+            value={settings.fontSize || (target === 'title' ? 40 : 14)}
+            onChange={(event) => onChange(`${path}.fontSize`, Number(event.target.value))}
+          />
+        </label>
+
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Color</span>
+          <input
+            className="h-[46px] w-full rounded-2xl border border-white/70 bg-white/80 p-2 shadow-sm"
+            type="color"
+            value={settings.color || (target === 'title' ? '#ffffff' : '#eafcff')}
+            onChange={(event) => onChange(`${path}.color`, event.target.value)}
+          />
+        </label>
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        {textAlignOptions.map((item) => {
+          const Icon = item.icon;
+          const active = (settings.align || 'center') === item.id;
+
+          return (
+            <button
+              key={item.id}
+              className={`builder-pill ${active ? 'bg-white text-sky-800 ring-2 ring-sky-200' : ''}`}
+              type="button"
+              onClick={() => onChange(`${path}.align`, item.id)}
+            >
+              <Icon size={16} />
+              {item.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

@@ -48,6 +48,24 @@ const getHostLine = (config) => (config.host?.names || []).filter(Boolean).join(
 
 const getEventTitle = (config) => config.title?.replace(/^Undangan\s+/i, '') || config.title;
 
+const fontFamilyMap = {
+  'Plus Jakarta Sans': "'Plus Jakarta Sans', sans-serif",
+  Inter: 'Inter, system-ui, sans-serif',
+  Poppins: 'Poppins, system-ui, sans-serif',
+  Playfair: "'Playfair Display', Georgia, serif",
+  Serif: 'Georgia, serif',
+  Mono: "'Courier New', monospace",
+};
+
+const getTextStyle = (settings = {}, fallback = {}) => ({
+  color: settings.color || fallback.color,
+  fontFamily: fontFamilyMap[settings.fontFamily] || fontFamilyMap[fallback.fontFamily] || fontFamilyMap['Plus Jakarta Sans'],
+  fontSize: `${settings.fontSize || fallback.fontSize}px`,
+  fontStyle: settings.italic ? 'italic' : 'normal',
+  fontWeight: settings.bold ? 900 : 500,
+  textAlign: settings.align || fallback.align || 'center',
+});
+
 const getCountdownTarget = (schedule) => {
   const date = schedule?.date || defaultInvitationConfig.schedule.date;
   const time = schedule?.time || defaultInvitationConfig.schedule.time;
@@ -829,7 +847,16 @@ const CoverPage = ({ config, guestName, onOpenInvitation, onImageError }) => (
       <div className="w-14 h-14 mx-auto mb-2 text-[#0077b6] flex items-center justify-center bg-white/60 rounded-full border border-white/80 shadow-md">
         <Sparkles size={24} className="animate-pulse text-amber-400" />
       </div>
-      <p className="text-[#0077b6] tracking-[0.25em] text-[10px] uppercase font-bold drop-shadow-xs">
+      <p
+        className="tracking-[0.25em] text-[10px] uppercase font-bold drop-shadow-xs"
+        style={getTextStyle(config.typography?.title, {
+          fontFamily: 'Plus Jakarta Sans',
+          fontSize: 10,
+          color: '#0077b6',
+          align: 'center',
+          bold: true,
+        })}
+      >
         {config.title}
       </p>
       <h1 className="font-serif-elegant text-3xl font-extrabold text-[#003049] tracking-wide mt-1 drop-shadow-md">
@@ -893,7 +920,16 @@ const OpeningTab = ({ config }) => (
       <span className="text-[#0077b6] tracking-[0.25em] text-[10px] uppercase font-bold drop-shadow-xs">
         {getEventTitle(config)}
       </span>
-      <h2 className="font-serif-elegant text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#003049] via-[#0077b6] to-[#003049] drop-shadow-xs mt-1">
+      <h2
+        className="font-serif-elegant text-transparent bg-clip-text bg-gradient-to-r from-[#003049] via-[#0077b6] to-[#003049] drop-shadow-xs mt-1"
+        style={getTextStyle(config.typography?.title, {
+          fontFamily: 'Playfair',
+          fontSize: 36,
+          color: '#003049',
+          align: 'center',
+          bold: true,
+        })}
+      >
         {config.title}
       </h2>
       <p className="font-serif-elegant text-lg italic text-[#0077b6] mt-1">{config.subject?.name}</p>
@@ -908,7 +944,15 @@ const OpeningTab = ({ config }) => (
         <span className="text-[#0077b6] font-bold mt-1 block">(QS. Ar-Rahman: 13)</span>
       </p>
       
-      <p className="text-xs text-slate-600 leading-relaxed font-light pt-2">
+      <p
+        className="leading-relaxed font-light pt-2"
+        style={getTextStyle(config.typography?.subtitle, {
+          fontFamily: 'Plus Jakarta Sans',
+          fontSize: 12,
+          color: '#475569',
+          align: 'center',
+        })}
+      >
         {config.subtitle}
       </p>
     </div>
