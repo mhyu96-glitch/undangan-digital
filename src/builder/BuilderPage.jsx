@@ -384,29 +384,29 @@ export default function BuilderPage() {
             </p>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <button className="builder-button" type="button" onClick={handleSaveDraft}>
+          <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:w-[560px]">
+            <button className="builder-button w-full" type="button" onClick={handleSaveDraft}>
               <Save size={16} />
               Simpan
             </button>
-            <button className="builder-button" type="button" onClick={() => downloadConfigJson(config)}>
+            <button className="builder-button w-full" type="button" onClick={() => downloadConfigJson(config)}>
               <Download size={16} />
               Export
             </button>
-            <button className="builder-button" type="button" onClick={handleDownloadStandaloneHtml}>
+            <button className="builder-button w-full" type="button" onClick={handleDownloadStandaloneHtml}>
               <Download size={16} />
               Paket Cloudflare
             </button>
-            <label className="builder-button cursor-pointer">
+            <label className="builder-button w-full cursor-pointer">
               <Upload size={16} />
               Import
               <input className="sr-only" type="file" accept="application/json" onChange={handleImport} />
             </label>
-            <a className="builder-button" href="/templates">
+            <a className="builder-button w-full" href="/templates">
               <LayoutTemplate size={16} />
               Templates
             </a>
-            <button className="builder-button" type="button" onClick={handleReset}>
+            <button className="builder-button w-full" type="button" onClick={handleReset}>
               <RotateCcw size={16} />
               Reset
             </button>
@@ -414,7 +414,7 @@ export default function BuilderPage() {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-7xl gap-5 px-4 py-5 lg:grid-cols-[190px_minmax(0,1fr)_320px] 2xl:grid-cols-[220px_minmax(0,1fr)_360px]">
+      <div className="mx-auto grid max-w-7xl gap-5 px-4 py-5 lg:grid-cols-[190px_minmax(0,1fr)_340px] 2xl:grid-cols-[220px_minmax(0,1fr)_360px]">
         <aside className="builder-panel h-fit lg:sticky lg:top-5">
           <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Editor</p>
           <nav className="grid gap-2">
@@ -959,44 +959,15 @@ function LivePreview({ config, onCopyPublicUrl, onDownloadPackage, publicUrl }) 
 
   return (
     <aside className="lg:sticky lg:top-5 lg:self-start">
-      <section className="builder-panel">
-        <div className="mb-4 flex items-center justify-between gap-3">
+      <section className="builder-panel space-y-4">
+        <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Realtime</p>
             <h2 className="text-lg font-bold text-slate-950">Live Preview</h2>
-            <p className="mt-1 inline-flex rounded-full bg-slate-950 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white">
-              {isClassic ? 'Classic Marine' : 'Best Mix'}
-            </p>
           </div>
-          <a
-            className="builder-pill text-sky-800"
-            href={createLocalInvitationUrl()}
-            onClick={() => saveBuilderDraft(config)}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <ExternalLink size={15} />
-            Buka undangan
-          </a>
-        </div>
-
-        <div className="mb-4 rounded-[22px] border border-white/70 bg-white/70 p-3 shadow-sm shadow-slate-200/70 backdrop-blur-xl">
-          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">Link Konsumen</p>
-          <div className="grid gap-2">
-            <textarea
-              className="builder-input min-h-24 resize-none text-xs leading-5"
-              readOnly
-              value={activePublicUrl}
-            />
-            <button className="builder-button w-full" type="button" onClick={onCopyPublicUrl}>
-              <Copy size={16} />
-              Salin link konsumen
-            </button>
-            <button className="builder-button w-full border-sky-200 bg-sky-50 text-sky-900" type="button" onClick={onDownloadPackage}>
-              <Download size={16} />
-              Download Paket Cloudflare
-            </button>
-          </div>
+          <p className="inline-flex rounded-full bg-slate-950 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+            {isClassic ? 'Classic Marine' : 'Best Mix'}
+          </p>
         </div>
 
         <div className="mx-auto max-w-[292px] 2xl:max-w-[312px]">
@@ -1004,7 +975,7 @@ function LivePreview({ config, onCopyPublicUrl, onDownloadPackage, publicUrl }) 
             <div className="relative overflow-hidden rounded-[30px] border border-slate-800 bg-slate-900">
               <div className="pointer-events-none absolute left-1/2 top-2 z-50 h-5 w-24 -translate-x-1/2 rounded-full bg-slate-950" />
               <div className="pointer-events-none absolute right-3 top-3 z-50 h-2 w-2 rounded-full bg-slate-700" />
-              <div className="h-[590px] overflow-hidden 2xl:h-[640px]">
+              <div className="h-[540px] overflow-hidden 2xl:h-[590px]">
                 {isClassic ? (
                   <BabyInvitation key={previewKey} config={config} />
                 ) : (
@@ -1012,6 +983,35 @@ function LivePreview({ config, onCopyPublicUrl, onDownloadPackage, publicUrl }) 
                 )}
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className="rounded-[22px] border border-white/70 bg-white/70 p-3 shadow-sm shadow-slate-200/70 backdrop-blur-xl">
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">Link Konsumen</p>
+          <input
+            className="builder-input h-12 truncate text-xs"
+            readOnly
+            value={activePublicUrl}
+          />
+          <div className="mt-3 grid gap-2">
+            <a
+              className="builder-button w-full text-sky-800"
+              href={createLocalInvitationUrl()}
+              onClick={() => saveBuilderDraft(config)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <ExternalLink size={16} />
+              Buka undangan
+            </a>
+            <button className="builder-button w-full" type="button" onClick={onCopyPublicUrl}>
+              <Copy size={16} />
+              Salin link konsumen
+            </button>
+            <button className="builder-button w-full border-sky-200 bg-sky-50 text-sky-900" type="button" onClick={onDownloadPackage}>
+              <Download size={16} />
+              Paket Cloudflare
+            </button>
           </div>
         </div>
       </section>
