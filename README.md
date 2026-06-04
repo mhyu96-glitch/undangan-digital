@@ -86,4 +86,17 @@ Builder menyimpan draft di browser localStorage. Klik `Export` di `/builder` unt
 
 ## Deployment
 
+### Cloudflare Pages
+
+Gunakan setting berikut di Cloudflare Pages:
+
+- Framework preset: `Vite`
+- Build command: `npm run build`
+- Build output directory: `dist`
+- Root directory: kosongkan atau `/`
+
+Jika upload manual, upload isi folder `dist`, bukan root project. File `public/_redirects` akan ikut masuk ke `dist` saat build supaya route seperti `/builder` dan `/templates` tetap diarahkan ke `index.html`.
+
+### Static Hosting Lain
+
 Deploy folder `dist` ke static hosting seperti Netlify, Vercel, GitHub Pages, Firebase Hosting, atau server static lain. Pastikan semua route diarahkan ke `index.html` agar `/builder` tetap bisa dibuka.
