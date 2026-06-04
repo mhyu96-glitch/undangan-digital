@@ -75,15 +75,29 @@ const fileToDataUrl = (file) =>
 const prepareStandaloneConfig = async (config) => {
   const { getAudioFile, getIndexedAudioId, isIndexedAudioUrl } = await import('./audioStorage.js');
   const standaloneConfig = JSON.parse(JSON.stringify(config));
+  const metadata = {
+    audioEmbedded: false,
+    audioName: '',
+    audioSize: 0,
+  };
 
   if (isIndexedAudioUrl(standaloneConfig.media?.musicUrl || '')) {
     const record = await getAudioFile(getIndexedAudioId(standaloneConfig.media.musicUrl));
-    if (record?.blob) {
-      standaloneConfig.media.musicUrl = await fileToDataUrl(record.blob);
+    if (!record?.blob) {
+      const error = new Error('Imported audio not found in this browser');
+      error.code = 'IMPORTED_AUDIO_NOT_FOUND';
+      throw error;
     }
+
+    standaloneConfig.media.musicUrl = await fileToDataUrl(record.blob);
+    standaloneConfig.media.musicName = record.name || standaloneConfig.media.musicName || 'audio-import';
+    standaloneConfig.media.musicSize = record.size || standaloneConfig.media.musicSize || record.blob.size || 0;
+    metadata.audioEmbedded = true;
+    metadata.audioName = standaloneConfig.media.musicName;
+    metadata.audioSize = standaloneConfig.media.musicSize;
   }
 
-  return standaloneConfig;
+  return { metadata, standaloneConfig };
 };
 
 const buildStandaloneInvitationHtml = (standaloneConfig) => {
@@ -139,7 +153,7 @@ const downloadBlob = (blob, filename) => {
 };
 
 export const downloadStandaloneInvitationHtml = async (config, filename = 'index.html') => {
-  const standaloneConfig = await prepareStandaloneConfig(config);
+  const { standaloneConfig } = await prepareStandaloneConfig(config);
   const html = buildStandaloneInvitationHtml(standaloneConfig);
   const blob = new Blob([html], { type: 'text/html' });
   downloadBlob(blob, filename);
@@ -240,7 +254,7 @@ const createZipBlob = (files) => {
 };
 
 export const downloadStandaloneInvitationZip = async (config, filename = 'undangan-cloudflare.zip') => {
-  const standaloneConfig = await prepareStandaloneConfig(config);
+  const { metadata, standaloneConfig } = await prepareStandaloneConfig(config);
   const html = buildStandaloneInvitationHtml(standaloneConfig);
   const zip = createZipBlob([
     { name: 'index.html', content: html },
@@ -252,6 +266,11 @@ export const downloadStandaloneInvitationZip = async (config, filename = 'undang
   ]);
 
   downloadBlob(zip, filename);
+  return {
+    ...metadata,
+    filename,
+    packageSize: zip.size,
+  };
 };
 
 export const downloadConfigJson = (config, filename = 'invitation-config.json') => {

@@ -56,6 +56,8 @@ export const defaultInvitationConfig = {
       'https://i.imgur.com/hZf4EZ2.jpeg',
     ],
     musicUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+    musicName: '',
+    musicSize: 0,
     fallbackImage: 'https://images.unsplash.com/photo-1519689680058-324335c77eb2?q=80&w=600',
   },
   animation: {

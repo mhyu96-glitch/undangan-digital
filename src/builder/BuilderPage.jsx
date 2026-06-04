@@ -186,6 +186,12 @@ const formatSectionLabel = (section) =>
     .map((item) => item.charAt(0).toUpperCase() + item.slice(1))
     .join(' ');
 
+const formatFileSize = (size = 0) => {
+  if (!size) return '';
+  if (size < 1024 * 1024) return `${Math.round(size / 1024)} KB`;
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+};
+
 export default function BuilderPage() {
   const [config, setConfig] = useState(() =>
     mergeConfig(defaultInvitationConfig, loadBuilderDraft()),
@@ -235,9 +241,18 @@ export default function BuilderPage() {
     try {
       saveBuilderDraft(config);
       setStatus('Menyiapkan paket Cloudflare Pages...');
-      await downloadStandaloneInvitationZip(config);
+      const result = await downloadStandaloneInvitationZip(config);
+      if (result.audioEmbedded) {
+        const audioSize = formatFileSize(result.audioSize);
+        setStatus(`Paket siap. Musik "${result.audioName}"${audioSize ? ` (${audioSize})` : ''} sudah ikut masuk.`);
+        return;
+      }
       setStatus('Paket undangan-cloudflare.zip siap diupload ke Cloudflare Pages');
-    } catch {
+    } catch (error) {
+      if (error.code === 'IMPORTED_AUDIO_NOT_FOUND') {
+        setStatus('Musik import tidak ditemukan di browser ini. Import ulang audio, lalu klik Paket Cloudflare lagi.');
+        return;
+      }
       setStatus('Gagal membuat file subdomain. Coba import audio lagi atau gunakan file lebih kecil.');
     }
   };
@@ -274,13 +289,32 @@ export default function BuilderPage() {
 
     try {
       const indexedUrl = await saveAudioFile(file);
-      setField('media.musicUrl', indexedUrl);
-      setStatus(`Musik "${file.name}" diimport. Klik Simpan lalu Buka undangan.`);
+      setConfig((currentConfig) => {
+        const next = cloneConfig(currentConfig);
+        next.media.musicUrl = indexedUrl;
+        next.media.musicName = file.name;
+        next.media.musicSize = file.size;
+        return next;
+      });
+      setPublicUrl('');
+      setStatus(`Musik "${file.name}" diimport. Klik Paket Cloudflare agar ikut masuk ke file upload.`);
     } catch {
       setStatus('Gagal import musik. Browser mungkin membatasi penyimpanan file ini.');
     } finally {
       event.target.value = '';
     }
+  };
+
+  const handleMusicUrlChange = (value) => {
+    setConfig((currentConfig) => {
+      const next = cloneConfig(currentConfig);
+      next.media.musicUrl = value;
+      next.media.musicName = '';
+      next.media.musicSize = 0;
+      return next;
+    });
+    setPublicUrl('');
+    setStatus('Preview diperbarui realtime');
   };
 
   const setGiftAccountField = (index, field, value) => {
@@ -624,7 +658,7 @@ export default function BuilderPage() {
                         className="builder-input"
                         placeholder="https://...mp3 atau https://soundcloud.com/..."
                         value={isIndexedAudioUrl(config.media.musicUrl) || config.media.musicUrl?.startsWith('data:audio/') ? 'Audio import tersimpan di browser ini' : config.media.musicUrl}
-                        onChange={(event) => setField('media.musicUrl', event.target.value)}
+                        onChange={(event) => handleMusicUrlChange(event.target.value)}
                       />
                       <label className="builder-button cursor-pointer">
                         <Upload size={16} />
@@ -639,7 +673,7 @@ export default function BuilderPage() {
                     ) : null}
                     {isIndexedAudioUrl(config.media.musicUrl) || config.media.musicUrl?.startsWith('data:audio/') ? (
                       <p className="rounded-2xl bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-800">
-                        Audio import akan jalan untuk preview dan Buka undangan di browser ini. Untuk Cloudflare Pages, klik Paket Cloudflare agar musik ikut masuk ke paket upload.
+                        Audio import {config.media.musicName ? `"${config.media.musicName}" ` : ''}{formatFileSize(config.media.musicSize) ? `(${formatFileSize(config.media.musicSize)}) ` : ''}tersimpan di browser ini. Untuk konsumen, klik Paket Cloudflare agar musik ditanam ke index.html.
                       </p>
                     ) : null}
                     {config.media.musicUrl && isSoundCloudUrl(config.media.musicUrl) ? (
