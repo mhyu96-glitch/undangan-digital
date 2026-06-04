@@ -458,17 +458,17 @@ export default function BestMixInvitation({ config, preview = false }) {
           ) : null}
 
           {isOpen && activeSection === 'cover' ? (
-            <section className="space-y-5 text-center">
-            <h1 className="text-4xl font-black leading-tight">{config.title}</h1>
-            <div className="best-glass overflow-hidden rounded-[30px] p-2">
-              <img
-                alt=""
-                className="aspect-[4/3] w-full rounded-[24px] object-cover"
-                src={config.media.coverImage}
-                onError={handleImageError}
-              />
-            </div>
-            <p className="text-sm leading-7 text-white/82">{config.subtitle}</p>
+            <section className="flex min-h-[calc(100vh-208px)] flex-col justify-center space-y-5 text-center">
+              <h1 className="text-4xl font-black leading-tight">{config.title}</h1>
+              <div className="best-glass overflow-hidden rounded-[30px] p-2">
+                <img
+                  alt=""
+                  className="aspect-[4/3] w-full rounded-[24px] object-cover"
+                  src={config.media.coverImage}
+                  onError={handleImageError}
+                />
+              </div>
+              <p className="text-sm leading-7 text-white/82">{config.subtitle}</p>
             </section>
           ) : null}
 
