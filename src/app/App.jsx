@@ -1,8 +1,10 @@
+import { useEffect, useMemo, useState } from 'react';
 import BabyInvitation from '../../BabyInvitation.jsx';
 import BuilderPage from '../builder/BuilderPage.jsx';
 import BestMixInvitation from '../templates/BestMixInvitation.jsx';
 import TemplateShowcase from '../templates/TemplateShowcase.jsx';
-import { getActiveInvitationConfig } from '../services/configMerge.js';
+import { getActiveInvitationConfig, mergeConfig } from '../services/configMerge.js';
+import defaultInvitationConfig from '../config/defaultInvitationConfig.js';
 
 const normalizePath = (pathname) => {
   const normalized = pathname.replace(/\/+$/, '');
@@ -11,7 +13,26 @@ const normalizePath = (pathname) => {
 
 export default function App() {
   const path = normalizePath(window.location.pathname);
-  const config = getActiveInvitationConfig();
+  const params = new URLSearchParams(window.location.search);
+  const forceInvite = params.get('mode') === 'invite';
+  const waitsForMessageConfig = params.get('source') === 'message';
+  const initialConfig = useMemo(() => getActiveInvitationConfig(), []);
+  const [messageConfig, setMessageConfig] = useState(null);
+  const config = messageConfig ? mergeConfig(defaultInvitationConfig, messageConfig) : initialConfig;
+
+  useEffect(() => {
+    if (!waitsForMessageConfig) return undefined;
+
+    const handleMessage = (event) => {
+      if (event.data?.type === 'INVITATION_CONFIG' && event.data.config) {
+        setMessageConfig(event.data.config);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    window.parent?.postMessage({ type: 'REQUEST_INVITATION_CONFIG' }, '*');
+    return () => window.removeEventListener('message', handleMessage);
+  }, [waitsForMessageConfig]);
 
   const renderInvitation = () => {
     if (config.template === 'best-mix') {
@@ -21,16 +42,16 @@ export default function App() {
     return <BabyInvitation config={config} />;
   };
 
+  if (forceInvite || path === '/invite' || path === '/undangan') {
+    return renderInvitation();
+  }
+
   if (path === '/' || path === '/builder') {
     return <BuilderPage />;
   }
 
   if (path === '/templates') {
     return <TemplateShowcase />;
-  }
-
-  if (path === '/invite' || path === '/undangan') {
-    return renderInvitation();
   }
 
   return <BuilderPage />;

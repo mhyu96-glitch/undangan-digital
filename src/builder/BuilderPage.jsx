@@ -24,7 +24,9 @@ import defaultInvitationConfig from '../config/defaultInvitationConfig.js';
 import { getInvitationTheme, invitationThemes } from '../config/themes.js';
 import {
   clearBuilderDraft,
+  createLocalInvitationUrl,
   createPublicInvitationUrl,
+  downloadStandaloneInvitationHtml,
   downloadConfigJson,
   loadBuilderDraft,
   saveBuilderDraft,
@@ -190,6 +192,12 @@ export default function BuilderPage() {
     setStatus('Link konsumen sudah disalin');
   };
 
+  const handleDownloadStandaloneHtml = () => {
+    saveBuilderDraft(config);
+    downloadStandaloneInvitationHtml(config);
+    setStatus('File index.html undangan siap untuk subdomain');
+  };
+
   const handleReset = () => {
     clearBuilderDraft();
     setConfig(cloneConfig(defaultInvitationConfig));
@@ -297,6 +305,10 @@ export default function BuilderPage() {
             <button className="builder-button" type="button" onClick={() => downloadConfigJson(config)}>
               <Download size={16} />
               Export
+            </button>
+            <button className="builder-button" type="button" onClick={handleDownloadStandaloneHtml}>
+              <Download size={16} />
+              File Subdomain
             </button>
             <label className="builder-button cursor-pointer">
               <Upload size={16} />
@@ -846,7 +858,7 @@ function LivePreview({ config, onCopyPublicUrl, publicUrl }) {
           </div>
           <a
             className="builder-pill text-sky-800"
-            href="/invite"
+            href={createLocalInvitationUrl()}
             onClick={() => saveBuilderDraft(config)}
             target="_blank"
             rel="noopener noreferrer"

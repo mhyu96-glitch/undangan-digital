@@ -78,6 +78,16 @@ src/config/themes.js
 
 Builder menyimpan draft di browser localStorage. Klik `Export` di `/builder` untuk menyimpan config JSON yang bisa dipakai ulang.
 
+## Publish Untuk Konsumen
+
+Di `/builder`:
+
+- Klik `Simpan` untuk menyimpan draft lokal dan membuat link konsumen.
+- Klik `Buka undangan` untuk melihat undangan dari draft lokal.
+- Klik `File Subdomain` untuk mengunduh `index.html` yang bisa diupload ke subdomain atau Cloudflare Pages project khusus konsumen.
+
+Audio bisa memakai URL langsung seperti `.mp3`, link SoundCloud, atau `Import audio`. Jika memakai `Import audio`, file audio ikut masuk ke file subdomain sehingga tidak perlu hosting MP3 terpisah. Untuk file audio besar, ukuran `index.html` juga akan ikut besar.
+
 ## Scripts
 
 - `npm run dev` menjalankan Vite dev server.
