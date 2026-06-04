@@ -97,6 +97,8 @@ Gunakan setting berikut di Cloudflare Pages:
 
 Jika upload manual, upload isi folder `dist`, bukan root project. File `public/_redirects` akan ikut masuk ke `dist` saat build supaya route seperti `/builder` dan `/templates` tetap diarahkan ke `index.html`.
 
+Jika log Cloudflare menampilkan `No build command specified. Skipping build step.`, berarti Build command di dashboard masih kosong. Isi `npm run build`, lalu lakukan redeploy.
+
 ### Static Hosting Lain
 
 Deploy folder `dist` ke static hosting seperti Netlify, Vercel, GitHub Pages, Firebase Hosting, atau server static lain. Pastikan semua route diarahkan ke `index.html` agar `/builder` tetap bisa dibuka.
