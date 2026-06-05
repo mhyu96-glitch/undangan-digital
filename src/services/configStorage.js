@@ -1,5 +1,22 @@
 const BUILDER_DRAFT_KEY = 'digital-invitation-builder:draft';
 
+const normalizeImageUrl = (url = '') => {
+  const trimmedUrl = url.trim();
+  if (!trimmedUrl) return '';
+
+  const imgurMatch = trimmedUrl.match(/^https?:\/\/(?:www\.)?imgur\.com\/([a-zA-Z0-9]+)$/);
+  if (imgurMatch) {
+    return `https://i.imgur.com/${imgurMatch[1]}.jpeg`;
+  }
+
+  const imgurDirectWithoutExtension = trimmedUrl.match(/^https?:\/\/i\.imgur\.com\/([a-zA-Z0-9]+)$/);
+  if (imgurDirectWithoutExtension) {
+    return `https://i.imgur.com/${imgurDirectWithoutExtension[1]}.jpeg`;
+  }
+
+  return trimmedUrl;
+};
+
 const encodeUnicodeBase64 = (value) =>
   window.btoa(unescape(encodeURIComponent(value)));
 
@@ -98,6 +115,73 @@ const prepareStandaloneConfig = async (config) => {
   }
 
   return { metadata, standaloneConfig };
+};
+
+const imageExtensionFrom = (url, contentType = '') => {
+  if (contentType.includes('png')) return 'png';
+  if (contentType.includes('webp')) return 'webp';
+  if (contentType.includes('gif')) return 'gif';
+  if (contentType.includes('svg')) return 'svg';
+
+  const extensionMatch = new URL(url).pathname.match(/\.([a-z0-9]+)$/i);
+  const extension = extensionMatch?.[1]?.toLowerCase();
+  if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'].includes(extension)) {
+    return extension;
+  }
+
+  return 'jpg';
+};
+
+const safeMediaName = (label) => label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+const collectStandaloneMediaAssets = async (standaloneConfig) => {
+  const media = standaloneConfig.media || {};
+  const files = [];
+  const metadata = {
+    imagesEmbedded: 0,
+    imagesExternal: 0,
+  };
+  const cachedUrls = new Map();
+
+  const embedImage = async (rawUrl, label) => {
+    const normalizedUrl = normalizeImageUrl(rawUrl || '');
+    if (!normalizedUrl || normalizedUrl.startsWith('data:')) return normalizedUrl;
+    if (cachedUrls.has(normalizedUrl)) return cachedUrls.get(normalizedUrl);
+
+    try {
+      const response = await fetch(normalizedUrl, { mode: 'cors' });
+      const contentType = response.headers.get('content-type') || '';
+      if (!response.ok || !contentType.startsWith('image/')) {
+        throw new Error('Image response is not embeddable');
+      }
+
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      const extension = imageExtensionFrom(normalizedUrl, contentType);
+      const fileName = `assets/media/${safeMediaName(label)}-${files.length + 1}.${extension}`;
+      files.push({ name: fileName, content: bytes });
+      const localUrl = `/${fileName}`;
+      cachedUrls.set(normalizedUrl, localUrl);
+      metadata.imagesEmbedded += 1;
+      return localUrl;
+    } catch {
+      cachedUrls.set(normalizedUrl, normalizedUrl);
+      metadata.imagesExternal += 1;
+      return normalizedUrl;
+    }
+  };
+
+  if (media.coverImage) media.coverImage = await embedImage(media.coverImage, 'cover');
+  if (media.profileImage) media.profileImage = await embedImage(media.profileImage, 'profile');
+  if (media.backgroundImage) media.backgroundImage = await embedImage(media.backgroundImage, 'background');
+  if (media.fallbackImage) media.fallbackImage = await embedImage(media.fallbackImage, 'fallback');
+
+  if (Array.isArray(media.gallery)) {
+    media.gallery = await Promise.all(
+      media.gallery.map((url, index) => embedImage(url, `gallery-${index + 1}`)),
+    );
+  }
+
+  return { files, metadata };
 };
 
 const buildStandaloneInvitationHtml = (standaloneConfig, assets = { scripts: [], styles: [] }) => {
@@ -218,6 +302,7 @@ const downloadBlob = (blob, filename) => {
 
 export const downloadStandaloneInvitationHtml = async (config, filename = 'index.html') => {
   const { standaloneConfig } = await prepareStandaloneConfig(config);
+  await collectStandaloneMediaAssets(standaloneConfig);
   const assets = await collectStandaloneAssets();
   const html = buildStandaloneInvitationHtml(standaloneConfig, assets);
   const blob = new Blob([html], { type: 'text/html' });
@@ -326,11 +411,13 @@ const createZipBlob = (files) => {
 
 export const downloadStandaloneInvitationZip = async (config, filename = 'undangan-cloudflare.zip') => {
   const { metadata, standaloneConfig } = await prepareStandaloneConfig(config);
+  const mediaAssets = await collectStandaloneMediaAssets(standaloneConfig);
   const assets = await collectStandaloneAssets();
   const html = buildStandaloneInvitationHtml(standaloneConfig, assets);
   const zip = createZipBlob([
     { name: 'index.html', content: html },
     ...assets.files.map((asset) => ({ name: asset.name, content: asset.bytes })),
+    ...mediaAssets.files,
     { name: '_redirects', content: '/* /index.html 200\n' },
     {
       name: '_headers',
@@ -341,6 +428,7 @@ export const downloadStandaloneInvitationZip = async (config, filename = 'undang
   downloadBlob(zip, filename);
   return {
     ...metadata,
+    ...mediaAssets.metadata,
     filename,
     packageSize: zip.size,
   };

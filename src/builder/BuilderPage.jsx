@@ -242,12 +242,15 @@ export default function BuilderPage() {
       saveBuilderDraft(config);
       setStatus('Menyiapkan paket Cloudflare Pages...');
       const result = await downloadStandaloneInvitationZip(config);
+      const imageInfo = result.imagesEmbedded
+        ? ` ${result.imagesEmbedded} foto ikut masuk ke paket.`
+        : ' Foto masih memakai URL eksternal.';
       if (result.audioEmbedded) {
         const audioSize = formatFileSize(result.audioSize);
-        setStatus(`Paket siap. Musik "${result.audioName}"${audioSize ? ` (${audioSize})` : ''} sudah ikut masuk.`);
+        setStatus(`Paket siap. Musik "${result.audioName}"${audioSize ? ` (${audioSize})` : ''} sudah ikut masuk.${imageInfo}`);
         return;
       }
-      setStatus('Paket undangan-cloudflare.zip siap diupload ke Cloudflare Pages');
+      setStatus(`Paket undangan-cloudflare.zip siap diupload ke Cloudflare Pages.${imageInfo}`);
     } catch (error) {
       if (error.code === 'IMPORTED_AUDIO_NOT_FOUND') {
         setStatus('Musik import tidak ditemukan di browser ini. Import ulang audio, lalu klik Paket Cloudflare lagi.');
